@@ -1,3 +1,8 @@
 package enums
 
-// TODO: Define no_violation and violation verdicts.
+type Verdict string
+
+const (
+	VerdictViolation   Verdict = "violation"
+	VerdictNoViolation Verdict = "no_violation"
+)

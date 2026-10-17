@@ -8,7 +8,7 @@ services:
     environment:
       SWAGGER_JSON: /spec/openapi.yaml
       VALIDATOR_URL: none
-      SUPPORTED_SUBMIT_METHODS: "[]"
+      SUPPORTED_SUBMIT_METHODS: '["get", "post"]'
       PERSIST_AUTHORIZATION: "false"
       DEEP_LINKING: "true"
       DISPLAY_OPERATION_ID: "true"

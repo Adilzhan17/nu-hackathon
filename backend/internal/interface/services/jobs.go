@@ -1,3 +1,10 @@
 package services
 
-// TODO: Define job status and result retrieval.
+import (
+	"context"
+	"nu-hackathon/backend/internal/models"
+)
+
+type Jobs interface {
+	Get(context.Context, string) (models.Job, error)
+}

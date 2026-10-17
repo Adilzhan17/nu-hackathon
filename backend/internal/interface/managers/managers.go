@@ -1,3 +1,7 @@
 package managers
 
-// TODO: Define IMainManager and component manager accessors.
+type IMainManager interface {
+	GetServicesManager() IServicesManager
+	GetRepositoriesManager() IRepositoriesManager
+	GetProcessorsManager() IProcessorsManager
+}

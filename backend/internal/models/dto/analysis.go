@@ -1,3 +1,5 @@
 package dto
 
-// TODO: Define upload acceptance DTOs matching docs/openapi.yaml.
+type AnalysisAccepted struct {
+	JobID string `json:"job_id"`
+}

@@ -1,3 +1,5 @@
 package managers
 
-// TODO: Define repository manager accessors.
+import "nu-hackathon/backend/internal/interface/repositories"
+
+type IRepositoriesManager interface{ Jobs() repositories.Jobs }

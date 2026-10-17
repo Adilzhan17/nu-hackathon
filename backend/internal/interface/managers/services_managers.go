@@ -1,3 +1,8 @@
 package managers
 
-// TODO: Define service manager accessors.
+import "nu-hackathon/backend/internal/interface/services"
+
+type IServicesManager interface {
+	Analysis() services.Analysis
+	Jobs() services.Jobs
+}

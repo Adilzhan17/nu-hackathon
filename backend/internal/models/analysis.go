@@ -1,3 +1,8 @@
 package models
 
-// TODO: Define analysis results with exactly two verdicts.
+import "nu-hackathon/backend/internal/enums"
+
+type Analysis struct {
+	Verdict    enums.Verdict `json:"verdict"`
+	Violations []Violation   `json:"violations"`
+}

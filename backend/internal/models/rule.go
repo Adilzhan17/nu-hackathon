@@ -1,3 +1,7 @@
 package models
 
-// TODO: Define verified Kazakhstan rule references without invented entries.
+type Rule struct {
+	Title   string `json:"title"`
+	Section string `json:"section,omitempty"`
+	URL     string `json:"url,omitempty"`
+}
