@@ -63,3 +63,35 @@ test("BFF sanitizes upstream errors and will not follow redirects with credentia
   assert.equal(response.status, 401);
   assert.equal((await response.text()).includes("test-server-secret"), false);
 });
+
+test("BFF accepts the browser Host after Next normalizes loopback URLs and rejects other origins", async (t) => {
+  process.env.API_BASE_URL = "http://127.0.0.1:8080";
+  process.env.API_KEY = "test-server-secret";
+  let forwarded = 0;
+  t.mock.method(globalThis, "fetch", async () => {
+    forwarded++;
+    return Response.json({ job_id: "local-job" }, { status: 202 });
+  });
+  for (const [origin, status] of [
+    ["http://127.0.0.1:3000", 202],
+    ["http://localhost:3000", 403],
+    ["http://127.0.0.1:4000", 403],
+    ["https://other.example", 403],
+    ["null", 403],
+    ["", 403],
+  ] as const) {
+    const form = new FormData();
+    form.set("file", new File(["video"], "test.mov"));
+    const request = new Request("http://localhost:3000/api/analysis", {
+      method: "POST",
+      body: form,
+      headers: {
+        host: "127.0.0.1:3000",
+        origin,
+        "x-forwarded-host": "other.example",
+      },
+    });
+    assert.equal((await proxy(request, "/api/v1/analyze")).status, status, origin);
+  }
+  assert.equal(forwarded, 1);
+});

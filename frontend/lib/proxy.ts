@@ -6,7 +6,12 @@ export async function proxy(request: Request, path: string) {
     return Response.json({ error: "Analysis API is not configured" }, { status: 503 });
   if (request.method === "POST") {
     const origin = request.headers.get("origin");
-    if (!origin || origin !== new URL(request.url).origin)
+    const url = new URL(request.url);
+    // Next.js normalizes loopback URLs to localhost. Host retains the actual
+    // browser-facing authority; do not trust a supplied X-Forwarded-Host here.
+    const host = request.headers.get("host") ?? url.host;
+    const expectedOrigin = `${url.protocol}//${host}`;
+    if (!origin || origin !== expectedOrigin)
       return Response.json({ error: "Origin rejected" }, { status: 403 });
     if (!request.headers.get("content-type")?.startsWith("multipart/form-data;"))
       return Response.json({ error: "Multipart upload required" }, { status: 415 });
