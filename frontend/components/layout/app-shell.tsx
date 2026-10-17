@@ -13,7 +13,6 @@ import {
   PanelLeftOpen,
   Plus,
   X,
-  LockKeyhole,
 } from "lucide-react";
 import { USE_MOCK_API } from "@/services/api";
 import {
@@ -32,7 +31,7 @@ function HelpDialog() {
       <DialogTrigger asChild>
         <button className="help-button" title="Как это работает">
           <CircleHelp size={18} />
-          <span>Как это работает</span>
+          <span>Помощь</span>
           <ArrowUpRight size={14} />
         </button>
       </DialogTrigger>
@@ -126,7 +125,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     },
     {
       href: "/analysis",
-      label: "Результаты анализа",
+      label: "Записи",
       short: "Записи",
       icon: Clapperboard,
       active: pathname === "/analysis" || isResult,
@@ -192,21 +191,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <X size={20} />
           </button>
         </div>
-        <div className="workspace">
-          <img
-            className="workspace-logo"
-            src="/brand/forte-symbol.svg"
-            alt=""
-            width={32}
-            height={32}
-          />
-          <div>
-            <strong>ForteBank</strong>
-            <small>Контроль операций</small>
-          </div>
-          <span className="workspace-dot" />
-        </div>
-        <p className="nav-section-label">Рабочее пространство</p>
         <nav aria-label="Разделы приложения">
           {links.map(({ icon: Icon, ...item }) => (
             <Link
@@ -225,19 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </nav>
         <div className="sidebar-bottom">
           <HelpDialog />
-          <div className="local-note">
-            <LockKeyhole size={15} />
-            <p>
-              {USE_MOCK_API ? "Демо без отправки видео на сервер" : "Обработка в вашем сервисе"}
-            </p>
-          </div>
-          <div className="sidebar-footer">
-            <span className="project-avatar">FV</span>
-            <div>
-              <strong>Datathon 2026</strong>
-              <small>Команда Forte Vision</small>
-            </div>
-          </div>
+          <p className="sidebar-caption">ForteBank · Datathon 2026</p>
         </div>
       </aside>
       <div className="app-main" inert={open}>
@@ -260,23 +232,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {isResult ? "Проверка записи" : (links.find((l) => l.active)?.label ?? "Страница")}
             </span>
           </div>
-          <div className="topbar-right">
-            <span className="mode-badge">
-              <span className="status-dot" />
-              {USE_MOCK_API ? "Деморежим" : "Режим API"}
-            </span>
-            <span className="header-project">Datathon ’26</span>
-          </div>
+          {USE_MOCK_API && <span className="mode-badge">Деморежим</span>}
         </header>
         <main id="main-content" tabIndex={-1}>
           {children}
         </main>
-        <footer className="page-footer">
-          <span>
-            Forte Vision <span>© 2026</span>
-          </span>
-          <span>Решение остаётся за специалистом</span>
-        </footer>
         <nav className="mobile-bottom-nav" aria-label="Быстрая навигация">
           {links.map(({ icon: Icon, ...item }) => (
             <Link

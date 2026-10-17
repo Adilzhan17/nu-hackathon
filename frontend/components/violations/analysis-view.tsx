@@ -3,9 +3,6 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
-  ArrowRight,
-  Check,
-  ChevronRight,
   CircleAlert,
   CircleCheck,
   Clock3,
@@ -81,7 +78,10 @@ export function AnalysisView({ id }: { id: string }) {
               </Link>
             </Button>
           </div>
-          <small>Задача: {id}</small>
+          <details className="disclosure job-details">
+            <summary>Данные задачи</summary>
+            <code>{id}</code>
+          </details>
         </div>
       </div>
     );
@@ -106,33 +106,20 @@ export function AnalysisView({ id }: { id: string }) {
             {filename}
           </p>
           <p>
-            {demo
-              ? "Демонстрация обработки. Результат задан выбранным сценарием; AI-модель не запускается."
-              : "Сервис проверяет последовательность действий и подготавливает результат. Это может занять несколько минут."}
+            {demo ? "Демосценарий. Модель не запускается." : "Это может занять несколько минут."}
           </p>
           <div className="indeterminate-track">
             <span />
           </div>
-          <div className="processing-steps">
-            <span>
-              <Check size={16} />
-              Запись принята
-            </span>
-            <span>
-              <LoaderCircle size={16} className="spin" />
-              Анализ
-            </span>
-            <span>
-              <Clock3 size={16} />
-              Результат
-            </span>
-          </div>
           <p className="processing-status" role="status">
             {retrying
               ? "Соединение прервалось. Повторяем запрос статуса…"
-              : "Статус обновляется автоматически. Процент выполнения сервером не передаётся."}
+              : "Статус обновляется автоматически."}
           </p>
-          <small>Задача: {id}</small>
+          <details className="disclosure job-details">
+            <summary>Данные задачи</summary>
+            <code>{id}</code>
+          </details>
         </div>
       </div>
     );
@@ -147,16 +134,10 @@ export function AnalysisView({ id }: { id: string }) {
         <div>
           <div className="inline-heading">
             <h1>Результат анализа</h1>
-            <span className="badge badge-success">
-              <Check size={12} />
-              Завершён
-            </span>
           </div>
           <p className="filename-line">
             <FileVideo2 size={15} />
             <span>{filename}</span>
-            <span>·</span>
-            <span>{demo ? "Учебный сценарий" : "Кассовая операция"}</span>
           </p>
         </div>
         <Button variant="outline" asChild>
@@ -169,11 +150,7 @@ export function AnalysisView({ id }: { id: string }) {
       {demo && (
         <div className="demo-banner">
           <Info size={16} />
-          <p>
-            <strong>Демонстрационный результат.</strong> События и кадры подготовлены для знакомства
-            с интерфейсом, а не получены из видео.
-          </p>
-          <span className="badge badge-neutral">Демо</span>
+          <p>Учебный пример. События и кадры подготовлены заранее.</p>
         </div>
       )}
       <div className="results-grid">
@@ -204,15 +181,14 @@ export function AnalysisView({ id }: { id: string }) {
           <div className="analysis-panel-title">
             <ScanLine size={20} />
             <h2>Анализ событий</h2>
-            <span className="badge badge-neutral">{demo ? "Демо" : "AI"}</span>
           </div>
           <div className={cn("verdict-block", !violation && "verdict-clear")}>
             {violation ? <TriangleAlert size={25} /> : <CircleCheck size={27} />}
             <h3>{violation ? "Требует внимания" : "Признаки не обнаружены"}</h3>
             <p>
               {violation
-                ? "Обнаружены признаки возможных нарушений. Проверьте отмеченные фрагменты."
-                : "В этой записи система не обнаружила признаков возможных нарушений."}
+                ? "Проверьте отмеченные фрагменты."
+                : "При необходимости просмотрите запись целиком."}
             </p>
             <span>
               {violation ? `${events.length} события для проверки` : "0 отмеченных событий"}
@@ -222,7 +198,6 @@ export function AnalysisView({ id }: { id: string }) {
             <div className="event-list">
               <div className="event-list-heading">
                 <h3>События</h3>
-                <span>Нажмите для просмотра</span>
               </div>
               {events.map((event, index) => (
                 <button
@@ -241,43 +216,15 @@ export function AnalysisView({ id }: { id: string }) {
                     </span>
                   </span>
                   <strong>{event.type}</strong>
-                  <span className="event-item-bottom">
-                    Проверить фрагмент
-                    <ChevronRight size={15} />
-                  </span>
                 </button>
               ))}
             </div>
-          ) : (
-            <div className="negative-detail">
-              <ShieldCheck size={28} />
-              <h3>Проверка завершена</h3>
-              <p>
-                Отрицательный результат не гарантирует отсутствие любых нарушений. При необходимости
-                просмотрите запись самостоятельно.
-              </p>
-            </div>
-          )}
+          ) : null}
           <div className="human-review-note">
             <ShieldCheck size={18} />
-            <p>
-              AI помогает находить события. Итоговую оценку даёт специалист с учётом контекста
-              операции.
-            </p>
+            <p>Итоговое решение принимает специалист.</p>
           </div>
         </aside>
-      </div>
-      <div className="results-bottom">
-        <span>
-          <ShieldCheck size={14} />
-          {demo
-            ? "Данные примера не относятся к реальным операциям"
-            : "Результат автоматического анализа требует проверки"}
-        </span>
-        <Link className="text-link" href="/analysis/new">
-          Проверить другую запись
-          <ArrowRight size={15} />
-        </Link>
       </div>
     </div>
   );

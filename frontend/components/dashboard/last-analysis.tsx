@@ -18,22 +18,17 @@ export function LastAnalysis({ compact = false }: { compact?: boolean }) {
     <Link className="last-analysis panel" href={`/analysis/${encodeURIComponent(last.id)}`}>
       <FileVideo2 size={24} />
       <span>
-        <small>Последняя задача в этой вкладке</small>
+        <small>Последняя проверка</small>
         <strong>{last.name}</strong>
       </span>
       <span>Открыть результат</span>
       <ArrowRight size={18} />
     </Link>
-  ) : (
+  ) : compact ? null : (
     <div className="empty-session">
       <FileVideo2 size={24} />
       <div>
         <strong>Пока нет загруженных записей</strong>
-        <p>
-          {compact
-            ? "Последняя проверка появится здесь."
-            : "Загрузите видео — здесь появится последняя задача этой вкладки."}
-        </p>
       </div>
       <Link href="/analysis/new" className="text-link">
         Добавить видео

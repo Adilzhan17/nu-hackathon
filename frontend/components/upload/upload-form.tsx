@@ -1,16 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowLeft,
   ArrowRight,
   Check,
   FileVideo2,
   Info,
   LoaderCircle,
-  LockKeyhole,
-  ShieldCheck,
   Trash2,
   UploadCloud,
 } from "lucide-react";
@@ -19,7 +15,7 @@ import { analyzeVideo, USE_MOCK_API } from "@/services/api";
 import { rememberUpload } from "@/lib/session";
 import { cn, fileSize, validateVideo } from "@/lib/utils";
 import type { MockScenario } from "@/types/analysis";
-export function UploadForm() {
+export function UploadForm({ embedded = false }: { embedded?: boolean }) {
   const router = useRouter();
   const input = useRef<HTMLInputElement>(null);
   const controller = useRef<AbortController | null>(null);
@@ -79,167 +75,108 @@ export function UploadForm() {
     }
   }
   return (
-    <div className="page upload-page">
-      <Link className="back-link" href="/">
-        <ArrowLeft size={16} />К обзору
-      </Link>
-      <div className="page-heading">
-        <div>
-          <h1>Новый анализ</h1>
-          <p>Загрузите запись кассовой операции для проверки.</p>
+    <div className={embedded ? "upload-workspace" : "page upload-page"}>
+      {!embedded && (
+        <div className="page-heading">
+          <div>
+            <h1>Новый анализ</h1>
+            <p>Загрузите запись кассовой операции.</p>
+          </div>
         </div>
-        <span className="subtle-tag">
-          <LockKeyhole size={14} />
-          {USE_MOCK_API ? "Без отправки на сервер" : "Ваш сервис обработки"}
-        </span>
-      </div>
-      <div className="upload-layout">
-        <form className="panel upload-panel" onSubmit={submit}>
-          <div className="section-heading">
-            <h2>Видеозапись</h2>
-            <span>1 файл</span>
-          </div>
-          <p className="section-description">Выберите исходную запись с камеры наблюдения.</p>
-          <div
-            className={cn("dropzone", dragging && "dragging", file && "has-file")}
-            onDragOver={(e) => {
-              e.preventDefault();
-              if (ready && !uploading) setDragging(true);
-            }}
-            onDragLeave={(e) => {
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              if (ready && !uploading) selectFile(e.dataTransfer.files);
-            }}
-          >
-            {file ? (
-              <>
-                <span className="upload-symbol selected">
-                  <FileVideo2 size={32} />
-                </span>
-                <strong className="selected-filename">{file.name}</strong>
-                <p>
-                  {fileSize(file.size)} <span>·</span> MOV
-                </p>
-                <span className="valid-file">
-                  <Check size={14} />
-                  Файл готов к загрузке
-                </span>
-                <div className="selected-actions">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => input.current?.click()}
-                    disabled={!ready || uploading}
-                  >
-                    Заменить файл
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Удалить выбранный файл"
-                    disabled={!ready || uploading}
-                    onClick={() => {
-                      setFile(undefined);
-                      setError("");
-                      if (input.current) input.current.value = "";
-                    }}
-                  >
-                    <Trash2 size={17} />
-                  </Button>
-                </div>
-              </>
-            ) : (
-              <>
-                <span className="upload-symbol">
-                  <UploadCloud size={33} strokeWidth={1.5} />
-                </span>
-                <h3>Перетащите видео сюда</h3>
-                <p>или выберите файл на компьютере</p>
+      )}
+      <form className="upload-panel" onSubmit={submit}>
+        <div
+          className={cn("dropzone", dragging && "dragging", file && "has-file")}
+          onDragOver={(e) => {
+            e.preventDefault();
+            if (ready && !uploading) setDragging(true);
+          }}
+          onDragLeave={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false);
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            if (ready && !uploading) selectFile(e.dataTransfer.files);
+          }}
+        >
+          {file ? (
+            <>
+              <span className="upload-symbol selected">
+                <FileVideo2 size={32} />
+              </span>
+              <strong className="selected-filename">{file.name}</strong>
+              <p>
+                {fileSize(file.size)} <span>·</span> MOV
+              </p>
+              <span className="valid-file">
+                <Check size={14} />
+                Файл готов к загрузке
+              </span>
+              <div className="selected-actions">
                 <Button
-                  variant="outline"
                   type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() => input.current?.click()}
-                  disabled={!ready}
+                  disabled={!ready || uploading}
                 >
-                  Выбрать файл
-                  <ArrowUpIcon />
+                  Заменить файл
                 </Button>
-                <small>
-                  .MOV <span>·</span> до 500 МБ
-                </small>
-              </>
-            )}
-            <input
-              ref={input}
-              className="sr-only"
-              type="file"
-              accept=".mov,video/quicktime"
-              aria-label="Выбрать видео .mov"
-              aria-describedby={error ? "upload-error" : undefined}
-              disabled={!ready || uploading}
-              onChange={(e) => {
-                selectFile(e.target.files);
-                e.target.value = "";
-              }}
-            />
-          </div>
-          {error && (
-            <div id="upload-error" className="error-message" role="alert">
-              <Info size={18} />
-              <span>{error}</span>
-            </div>
-          )}
-          {USE_MOCK_API && (
-            <fieldset className="scenario-fieldset" disabled={!ready || uploading}>
-              <legend>
-                Сценарий демонстрации <span className="badge badge-neutral">Демо</span>
-              </legend>
-              <p>Заранее заданный результат, не вывод AI по вашему видео.</p>
-              <div className="scenario-options">
-                {(
-                  [
-                    {
-                      value: "violation",
-                      label: "Есть события",
-                      detail: "Два фрагмента для проверки",
-                    },
-                    {
-                      value: "no_violation",
-                      label: "Нет признаков",
-                      detail: "Отрицательный результат",
-                    },
-                    { value: "failed", label: "Ошибка", detail: "Сбой обработки" },
-                  ] as const
-                ).map((item) => (
-                  <label
-                    className={cn("scenario-option", scenario === item.value && "selected")}
-                    key={item.value}
-                  >
-                    <input
-                      type="radio"
-                      name="scenario"
-                      value={item.value}
-                      checked={scenario === item.value}
-                      onChange={() => setScenario(item.value)}
-                    />
-                    <span>
-                      <strong>{item.label}</strong>
-                      <small>{item.detail}</small>
-                    </span>
-                  </label>
-                ))}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Удалить выбранный файл"
+                  disabled={!ready || uploading}
+                  onClick={() => {
+                    setFile(undefined);
+                    setError("");
+                    if (input.current) input.current.value = "";
+                  }}
+                >
+                  <Trash2 size={17} />
+                </Button>
               </div>
-            </fieldset>
+            </>
+          ) : (
+            <>
+              <span className="upload-symbol">
+                <UploadCloud size={33} strokeWidth={1.5} />
+              </span>
+              <h3>Перетащите видео сюда</h3>
+              <p>MOV · до 500 МБ</p>
+              <Button type="button" onClick={() => input.current?.click()} disabled={!ready}>
+                Выбрать файл
+                <ArrowUpIcon />
+              </Button>
+            </>
           )}
+          <input
+            ref={input}
+            className="sr-only"
+            type="file"
+            accept=".mov,video/quicktime"
+            aria-label="Выбрать видео .mov"
+            aria-describedby={error ? "upload-error" : undefined}
+            disabled={!ready || uploading}
+            onChange={(e) => {
+              selectFile(e.target.files);
+              e.target.value = "";
+            }}
+          />
+        </div>
+        {error && (
+          <div id="upload-error" className="error-message" role="alert">
+            <Info size={18} />
+            <span>{error}</span>
+          </div>
+        )}
+        {file && (
           <div className="upload-submit">
             <span>
-              <ShieldCheck size={16} />
-              {USE_MOCK_API ? "Видео останется на устройстве" : "Отправка в ваш сервис"}
+              {USE_MOCK_API
+                ? "Демо · видео остаётся в браузере"
+                : "Видео будет отправлено на анализ"}
             </span>
             <Button type="submit" disabled={!ready || uploading}>
               {uploading ? (
@@ -255,39 +192,57 @@ export function UploadForm() {
               )}
             </Button>
           </div>
-          <div role="status" className="sr-only">
-            {uploading ? "Видеозапись загружается. Дождитесь завершения." : ""}
-          </div>
-        </form>
-        <aside className="upload-guide">
-          <h2>Перед загрузкой</h2>
-          <p>Выберите полную запись операции, чтобы сохранить последовательность действий.</p>
-          <ul>
-            <li>
-              <Check size={16} />
-              <span>Одна камера и одна касса в кадре</span>
-            </li>
-            <li>
-              <Check size={16} />
-              <span>Сохранена последовательность операции</span>
-            </li>
-            <li>
-              <Check size={16} />
-              <span>Действия и предметы различимы</span>
-            </li>
-          </ul>
-          <div className="guide-divider" />
-          <h3>Что будет после загрузки?</h3>
-          <p>Вы увидите статус обработки, затем результат с таймкодами и кадрами для проверки.</p>
-          <div className="note">
-            <Info size={18} />
-            <p>
-              Некоторые кодеки MOV не поддерживаются браузером. Для таких записей понадобится
-              совместимая preview-версия от бэкенда.
-            </p>
-          </div>
-        </aside>
-      </div>
+        )}
+        {USE_MOCK_API && (
+          <div className="demo-upload-note">Деморежим: результат задан заранее.</div>
+        )}
+        <div className="upload-options">
+          <details className="disclosure">
+            <summary>Требования к записи</summary>
+            <div className="disclosure-body">
+              <p>Одна камера и одна касса. Полная операция, различимые действия и предметы.</p>
+              <p>
+                MOV — контейнер: воспроизведение зависит от кодека. Если видео не открывается, нужна
+                совместимая версия от сервиса анализа.
+              </p>
+            </div>
+          </details>
+          {USE_MOCK_API && (
+            <details className="disclosure demo-settings">
+              <summary>Настроить демосценарий</summary>
+              <fieldset className="scenario-fieldset" disabled={!ready || uploading}>
+                <legend className="sr-only">Сценарий демонстрации</legend>
+                <div className="scenario-options">
+                  {(
+                    [
+                      { value: "violation", label: "Есть события" },
+                      { value: "no_violation", label: "Нет признаков" },
+                      { value: "failed", label: "Ошибка" },
+                    ] as const
+                  ).map((item) => (
+                    <label
+                      className={cn("scenario-option", scenario === item.value && "selected")}
+                      key={item.value}
+                    >
+                      <input
+                        type="radio"
+                        name="scenario"
+                        value={item.value}
+                        checked={scenario === item.value}
+                        onChange={() => setScenario(item.value)}
+                      />
+                      <span>{item.label}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            </details>
+          )}
+        </div>
+        <div role="status" className="sr-only">
+          {uploading ? "Видеозапись загружается. Дождитесь завершения." : ""}
+        </div>
+      </form>
     </div>
   );
 }

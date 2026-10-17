@@ -83,13 +83,6 @@ export function DemoList({ compact = false }: { compact?: boolean }) {
                 </div>
                 <div>
                   <strong>{job.name}</strong>
-                  <small>
-                    {job.scenario === "violation"
-                      ? "Два события для проверки"
-                      : job.scenario === "no_violation"
-                        ? "Отрицательный результат"
-                        : "Сценарий ошибки"}
-                  </small>
                 </div>
               </div>
               <span className="duration-cell">{timecode(job.duration)}</span>
@@ -107,7 +100,6 @@ export function DemoList({ compact = false }: { compact?: boolean }) {
                   <Icon size={13} />
                   {job.label}
                 </span>
-                <small>Учебный пример</small>
               </div>
               <ArrowUpRight size={18} className="row-arrow" />
             </Link>

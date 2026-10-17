@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Info } from "lucide-react";
+import { Plus } from "lucide-react";
 import { DemoList } from "@/components/dashboard/demo-list";
 import { Button } from "@/components/ui/button";
 import { LastAnalysis } from "@/components/dashboard/last-analysis";
@@ -10,7 +10,6 @@ export default function AnalysisPage() {
       <div className="page-heading">
         <div>
           <h1>Результаты анализа</h1>
-          <p>Откройте последнюю задачу или изучите учебный пример.</p>
         </div>
         <Button asChild>
           <Link href="/analysis/new">
@@ -22,18 +21,12 @@ export default function AnalysisPage() {
       <LastAnalysis />
       <section className="examples-panel">
         <div className="section-heading">
-          <h2>Учебные записи</h2>
+          <h2>Примеры проверки</h2>
           <span className="badge badge-neutral">Демо</span>
         </div>
+        <p className="section-description">Учебные данные, не результаты модели.</p>
         <DemoList />
       </section>
-      <div className="note">
-        <Info size={18} />
-        <p>
-          Примеры содержат заранее подготовленные события и схематичное видео. Они показывают
-          возможности интерфейса и не являются результатом работы модели.
-        </p>
-      </div>
     </div>
   );
 }

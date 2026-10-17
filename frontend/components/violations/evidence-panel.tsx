@@ -30,7 +30,7 @@ export function RegulatorySource({ event }: { event: Violation }) {
             )}
           </>
         ) : (
-          <p>Подтверждённый источник не указан. Событие требует проверки специалистом.</p>
+          <p>Подтверждённый источник не указан.</p>
         )}
       </div>
     </div>
@@ -95,7 +95,6 @@ export function EvidencePanel({
           ))}
         </div>
         <div className="evidence-copy">
-          <h3>Наблюдаемое действие</h3>
           <p>{event.description}</p>
           <button className="text-link" onClick={() => onSeek(event.timecode_sec)}>
             Перейти к {timecode(event.timecode_sec)}
@@ -109,7 +108,10 @@ export function EvidencePanel({
           Учебная схема. Не извлечена из загруженного видео.
         </p>
       )}
-      <RegulatorySource event={event} />
+      <details className="disclosure evidence-source">
+        <summary>Нормативное основание</summary>
+        <RegulatorySource event={event} />
+      </details>
     </section>
   );
 }

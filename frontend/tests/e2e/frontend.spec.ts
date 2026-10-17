@@ -4,8 +4,7 @@ const fixture = readFileSync("public/demo/cashier-preview.mp4");
 test("upload validation, processing, playback, evidence and event seek", async ({ page }) => {
   await page.goto("/analysis/new");
   await expect(page.getByRole("button", { name: "Выбрать файл", exact: true })).toBeEnabled();
-  await page.getByRole("button", { name: "Начать анализ" }).click();
-  await expect(page.locator("#upload-error")).toContainText("Сначала выберите");
+  await expect(page.getByRole("button", { name: "Начать анализ" })).toHaveCount(0);
   const input = page.getByLabel("Выбрать видео .mov", { exact: true });
   await input.setInputFiles({ name: "wrong.mp4", mimeType: "video/mp4", buffer: fixture });
   await expect(page.locator("#upload-error")).toContainText("Нужен файл");
@@ -46,6 +45,7 @@ test("negative and failed uploaded scenarios", async ({ page }) => {
     await page
       .getByLabel("Выбрать видео .mov", { exact: true })
       .setInputFiles({ name: "test.mov", mimeType: "video/quicktime", buffer: fixture });
+    await page.getByText("Настроить демосценарий", { exact: true }).click();
     await page.getByRole("radio", { name: new RegExp(radio) }).check();
     await page.getByRole("button", { name: "Начать анализ" }).click();
     await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible({
@@ -128,7 +128,7 @@ test("collapsed navigation persists and mobile navigation remains usable", async
   await expect(page.getByRole("button", { name: "Развернуть навигацию" })).toBeVisible();
   await page
     .getByRole("navigation", { name: "Разделы приложения" })
-    .getByRole("link", { name: "Результаты анализа" })
+    .getByRole("link", { name: "Записи" })
     .click();
   await expect(page).toHaveURL(/\/analysis$/);
   await page.setViewportSize({ width: 390, height: 844 });
@@ -141,4 +141,55 @@ test("collapsed navigation persists and mobile navigation remains usable", async
   await expect(page.getByRole("dialog", { name: "Основная навигация" })).toBeVisible();
   await page.keyboard.press("Escape");
   await expect(page.getByRole("button", { name: "Открыть меню" })).toBeFocused();
+});
+
+test("home upload supports file replacement, removal and direct analysis", async ({ page }) => {
+  await page.goto("/");
+  const input = page.getByLabel("Выбрать видео .mov", { exact: true });
+  await expect(page.getByRole("button", { name: "Выбрать файл", exact: true })).toBeEnabled();
+  await input.setInputFiles({ name: "first.mov", mimeType: "video/quicktime", buffer: fixture });
+  await expect(page.getByText("first.mov", { exact: true })).toBeVisible();
+  const chooserPromise = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Заменить файл" }).click();
+  await (
+    await chooserPromise
+  ).setFiles({ name: "replacement.mov", mimeType: "video/quicktime", buffer: fixture });
+  await expect(page.getByText("replacement.mov", { exact: true })).toBeVisible();
+  await expect(page.getByText("first.mov", { exact: true })).toHaveCount(0);
+  await page.getByRole("button", { name: "Удалить выбранный файл" }).click();
+  await expect(page.getByRole("button", { name: "Начать анализ" })).toHaveCount(0);
+  await input.setInputFiles({
+    name: "from-home.mov",
+    mimeType: "video/quicktime",
+    buffer: fixture,
+  });
+  await page.getByRole("button", { name: "Начать анализ" }).click();
+  await expect(page.getByRole("heading", { name: "Результат анализа" })).toBeVisible({
+    timeout: 15000,
+  });
+  await page.goto("/");
+  await page.locator(".last-analysis").click();
+  await expect(page.getByText("from-home.mov", { exact: true })).toBeVisible();
+});
+
+test("optional guidance is keyboard accessible and demo disclosures stay visible", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(page.getByText("Деморежим: результат задан заранее.")).toBeVisible();
+  const details = page
+    .locator("details")
+    .filter({ has: page.locator("summary", { hasText: "Требования к записи" }) });
+  await expect(details).not.toHaveAttribute("open", "");
+  await details.locator("summary").focus();
+  await page.keyboard.press("Enter");
+  await expect(details).toHaveAttribute("open", "");
+  await expect(details.getByText(/Одна камера и одна касса/)).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect(details).not.toHaveAttribute("open", "");
+  await page.goto("/analysis/demo-violation");
+  await expect(page.getByRole("heading", { name: "Результат анализа" })).toBeVisible();
+  const source = page.locator(".evidence-source");
+  await source.locator("summary").click();
+  await expect(source.getByText("Подтверждённый источник не указан.")).toBeVisible();
 });
