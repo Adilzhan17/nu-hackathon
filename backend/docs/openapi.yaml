@@ -1,0 +1,452 @@
+openapi: 3.0.3
+info:
+  title: ForteBank Video Analysis API
+  version: 0.2.0
+  description: |
+    API по разделу 10 кейса ForteBank Datathon 26.
+    HTTP-сервер и инфраструктура заданий реализованы; CV-модель ещё не подключена.
+    Сейчас загрузка возвращает 503 analysis_unavailable без создания задания.
+
+    Обработка должна выполняться локально, без облачных AI API, анализа звука
+    и идентификации лиц. Результат — признаки возможного нарушения для проверки
+    человеком. Общий предел получения результата жюри — 5 минут.
+
+    Пути analyze/jobs, X-API-Key, статусы, вердикты и обязательные поля результата
+    взяты из ТЗ. HTTP-коды, ошибки, служебные маршруты, regulatory_source,
+    ограничения ресурсов и хранение — решения команды.
+servers:
+  - url: http://127.0.0.1:8080
+    description: Локальный Go API
+tags:
+  - name: Analysis
+    description: Загрузка видео и получение результата фонового анализа
+  - name: Service
+    description: Проверка процесса, готовности и спецификация
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/v1/analyze:
+    post:
+      tags: [Analysis]
+      operationId: analyzeVideo
+      summary: Загрузить MOV-видео для локального анализа
+      description: |
+        При доступном анализаторе принимает один файл в поле file и возвращает
+        job_id без ожидания результата. Статус и результат запрашиваются через
+        GET /api/v1/jobs/{job_id}. При отключённом анализаторе возвращает 503
+        analysis_unavailable до сохранения видео и создания задания.
+
+        Лимит по умолчанию — 500 MiB (524288000 байт) на файл; суммарный размер
+        multipart ограничен этим лимитом плюс 1 MiB. Приём загрузки ограничен
+        110 секундами. Общий бюджет обработки — 270 секунд от начала загрузки,
+        включая очередь. Это настройки реализации, а не отдельные требования ТЗ.
+
+        Проверяется структура контейнера MOV, включая moov и mdat.
+        Такая проверка не подтверждает возможность декодирования кодека;
+        декодер должен быть частью будущей интеграции CV.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Один видеофайл с расширением .mov; анализируется только визуальный ряд
+            encoding:
+              file:
+                contentType: video/quicktime, application/octet-stream
+      responses:
+        '202':
+          description: Задание принято в обработку
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisAccepted'
+              example:
+                job_id: 3f2a9c1e3f2a9c1e3f2a9c1e3f2a9c1e
+        '400':
+          description: Нет файла, отсутствует расширение .mov или multipart-запрос некорректен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '408':
+          description: Истекло время приёма загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '413':
+          description: Превышен настроенный лимит файла или всего запроса
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '415':
+          description: Пустой файл или некорректная структура контейнера MOV
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          description: Анализатор недоступен, очередь или загрузчики заняты, либо сервис останавливается
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: analysis_unavailable
+                  message: The local vision analyzer has not been configured yet.
+
+  /api/v1/jobs/{job_id}:
+    get:
+      tags: [Analysis]
+      operationId: getAnalysisJob
+      summary: Получить статус и результат задания
+      description: |
+        processing включает ожидание worker и сам анализ.
+        done содержит verdict и violations; no_violation означает пустой список,
+        violation — от 1 до 32 событий. failed содержит безопасную строку error,
+        без успешного вердикта. insufficient_data контракт жюри не предусматривает.
+
+        Для каждого нарушения результат содержит источник правила. Поле
+        regulatory_source добавлено для существующего UI; в базовом JSON жюри
+        оно отсутствует. Во время сохранения результатов этот сервер требует
+        источник для каждого нарушения, хотя поле необязательно в совместимой
+        схеме ответа.
+
+        Результаты хранятся по умолчанию 24 часа и затем удаляются при очередной
+        очистке. После удаления возвращается 404. Незавершённые задания после
+        перезапуска процесса получают статус failed.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Непрозрачный идентификатор из ответа на загрузку
+          schema:
+            $ref: '#/components/schemas/JobId'
+      responses:
+        '200':
+          description: Текущее состояние задания
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+              examples:
+                processing:
+                  summary: Задание ожидает worker или обрабатывается
+                  value:
+                    job_id: 3f2a9c1e3f2a9c1e3f2a9c1e3f2a9c1e
+                    status: processing
+                noViolation:
+                  summary: После успешного анализа признаки нарушения не обнаружены
+                  value:
+                    job_id: 3f2a9c1e3f2a9c1e3f2a9c1e3f2a9c1e
+                    status: done
+                    verdict: no_violation
+                    violations: []
+                failed:
+                  summary: Техническая ошибка обработки
+                  value:
+                    job_id: 3f2a9c1e3f2a9c1e3f2a9c1e3f2a9c1e
+                    status: failed
+                    error: Video analysis failed
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Задание не найдено или уже удалено по сроку хранения
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /healthz:
+    get:
+      tags: [Service]
+      operationId: getHealth
+      summary: Проверить, что HTTP-процесс отвечает
+      security: []
+      responses:
+        '200':
+          description: Процесс работает; это не подтверждает готовность CV
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+
+  /readyz:
+    get:
+      tags: [Service]
+      operationId: getReadiness
+      summary: Проверить готовность БД и анализатора
+      description: Пока настоящая CV-модель не подключена, возвращает 503.
+      security: []
+      responses:
+        '200':
+          description: БД и анализатор готовы
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [ready]
+        '503':
+          description: Сервис ещё не готов к обработке видео
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: false
+                required: [status]
+                properties:
+                  status:
+                    type: string
+                    enum: [not_ready]
+
+  /openapi.yaml:
+    get:
+      tags: [Service]
+      operationId: getOpenAPI
+      summary: Получить встроенную спецификацию API
+      security: []
+      responses:
+        '200':
+          description: OpenAPI YAML текущей сборки
+          content:
+            application/yaml:
+              schema:
+                type: string
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Приватный ключ команды для жюри, не менее 16 байт.
+        Запросы без верного ключа отклоняются. Ключ не хранится в спецификации.
+  responses:
+    Unauthorized:
+      description: Ключ X-API-Key отсутствует или неверен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    InternalError:
+      description: Внутренняя ошибка API без раскрытия технических деталей
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    JobId:
+      type: string
+      minLength: 1
+      description: Непрозрачный идентификатор задания
+      example: 3f2a9c1e3f2a9c1e3f2a9c1e3f2a9c1e
+
+    AnalysisAccepted:
+      type: object
+      additionalProperties: false
+      required: [job_id]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+
+    JobResponse:
+      description: Формат зависит от статуса и, при done, от вердикта
+      oneOf:
+        - $ref: '#/components/schemas/ProcessingJob'
+        - $ref: '#/components/schemas/NoViolationJob'
+        - $ref: '#/components/schemas/ViolationJob'
+        - $ref: '#/components/schemas/FailedJob'
+
+    ProcessingJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [processing]
+
+    NoViolationJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status, verdict, violations]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [done]
+        verdict:
+          type: string
+          enum: [no_violation]
+        violations:
+          type: array
+          maxItems: 0
+          description: Обязательно пустой список после успешного анализа
+          items:
+            $ref: '#/components/schemas/Violation'
+
+    ViolationJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status, verdict, violations]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [done]
+        verdict:
+          type: string
+          enum: [violation]
+        violations:
+          type: array
+          minItems: 1
+          maxItems: 32
+          description: Наблюдаемые события; предел 32 выбран командой
+          items:
+            $ref: '#/components/schemas/Violation'
+
+    FailedJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [failed]
+        error:
+          type: string
+          minLength: 1
+          description: Безопасная строка для существующего фронта; без ключей и внутренних путей
+
+    Violation:
+      type: object
+      additionalProperties: false
+      required: [type, timecode_sec, description, evidence_frames]
+      properties:
+        type:
+          type: string
+          minLength: 1
+          description: Название типа события, до 256 байт UTF-8; закрытый перечень ещё не определён
+        timecode_sec:
+          type: number
+          format: double
+          minimum: 0
+          description: Конечное неотрицательное время события в секундах от начала видео
+          example: 44.2
+        description:
+          type: string
+          minLength: 1
+          description: |
+            Наблюдаемое действие, проверенное правило и объяснение, почему действие
+            может указывать на нарушение. Без предположений о невидимых операциях
+            и окончательного заключения о виновности. Не более 8192 байт UTF-8.
+        evidence_frames:
+          type: array
+          minItems: 1
+          maxItems: 3
+          description: |
+            Настоящие JPEG-кадры исходного видео. Каждый кадр не более 1 MiB
+            и 4096 пикселей по каждой стороне;
+            суммарный размер декодированных кадров результата не более 16 MiB.
+          items:
+            $ref: '#/components/schemas/EvidenceFrame'
+        regulatory_source:
+          $ref: '#/components/schemas/RegulatorySource'
+
+    RegulatorySource:
+      type: object
+      additionalProperties: false
+      required: [title]
+      description: |
+        Проверенный нормативный источник РК для объяснения события.
+        Расширение для UI; сервер требует источник у каждого нарушения.
+        Формальная проверка объекта не подтверждает юридическую применимость.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          description: Название нормативного акта или источника, до 1024 байт UTF-8
+        section:
+          type: string
+          description: Проверенный пункт или раздел при наличии, до 1024 байт UTF-8; не выдумывать
+        url:
+          type: string
+          format: uri
+          pattern: '^https://'
+          description: HTTPS-ссылка на первоисточник при наличии, до 2048 байт, без учётных данных в URL
+
+    EvidenceFrame:
+      type: object
+      additionalProperties: false
+      required: [timestamp_sec, image_base64]
+      properties:
+        timestamp_sec:
+          type: number
+          format: double
+          minimum: 0
+          description: Конечное неотрицательное время кадра в секундах от начала видео
+          example: 44.2
+        image_base64:
+          type: string
+          format: byte
+          minLength: 1
+          maxLength: 1398104
+          description: JPEG в base64 без префикса data:image/jpeg;base64,
+
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      description: Формат HTTP-ошибок команды; не совпадает со строкой failed.error
+      properties:
+        code:
+          type: string
+          minLength: 1
+          description: Машиночитаемый код ошибки
+          example: analysis_unavailable
+        message:
+          type: string
+          minLength: 1
+          description: Безопасное описание без ключей и внутренних путей
+          example: The local vision analyzer has not been configured yet.
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
