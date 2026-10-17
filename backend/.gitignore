@@ -1,0 +1,30 @@
+# Local configuration and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Build and validation output
+bin/
+tmp/
+.tmp/
+.tools/
+coverage/
+*.exe
+*.test
+coverage.out
+
+# Local media and weights
+storage/
+weights/
+*.mov
+*.MOV
+*.mp4
+*.avi
+*.mkv
+*.pt
+*.pth
+*.onnx
+*.safetensors
+*.gguf

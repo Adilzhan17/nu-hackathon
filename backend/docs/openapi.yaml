@@ -1,0 +1,338 @@
+openapi: 3.0.3
+info:
+  title: ForteBank Video Analysis API
+  version: 0.1.0-draft
+  description: |
+    Предварительный контракт по разделу 10 кейса ForteBank Datathon 26.
+    Сервер и анализ видео пока не реализованы.
+
+    Обработка локальная, без облачных AI API, анализа звука и идентификации лиц.
+    Результат — признаки возможного нарушения для проверки человеком.
+    Общий срок получения результата жюри — не более 5 минут.
+
+    Пути, X-API-Key, статусы, вердикты и поля результата взяты из ТЗ.
+    HTTP-коды, формат ошибок и лимит загрузки 64 MiB — решения команды
+    для будущей реализации, а не дополнительные требования организатора.
+servers:
+  - url: http://localhost:8080
+    description: Предполагаемый адрес будущего локального API; сервер ещё не реализован
+tags:
+  - name: Analysis
+    description: Загрузка видео и получение результата фонового анализа
+security:
+  - ApiKeyAuth: []
+paths:
+  /api/v1/analyze:
+    post:
+      tags: [Analysis]
+      operationId: analyzeVideo
+      summary: Загрузить MOV-видео для локального анализа
+      description: |
+        Принимает один файл в поле file и возвращает job_id без ожидания анализа.
+        Статус и результат запрашиваются через GET /api/v1/jobs/{job_id}.
+
+        Тестовые видео имеют формат MOV и размер около 29 МБ.
+        Предварительный лимит команды — 64 MiB (67108864 байта).
+        Контейнер и возможность декодирования проверяются по содержимому файла,
+        а не только по расширению или заявленному MIME.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Видеофайл .mov; анализируется только визуальный ряд
+            encoding:
+              file:
+                contentType: video/quicktime, application/octet-stream
+      responses:
+        '202':
+          description: Задание принято; HTTP 202 выбран командой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalysisAccepted'
+              example:
+                job_id: 3f2a9c1e
+        '400':
+          description: Поле file отсутствует, файл пуст или multipart-запрос некорректен
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: Превышен настроенный лимит размера загрузки
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '415':
+          description: Неподдерживаемый контейнер или формат видео
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          description: Сервис временно не может принять задание
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/jobs/{job_id}:
+    get:
+      tags: [Analysis]
+      operationId: getAnalysisJob
+      summary: Получить статус и результат задания
+      description: |
+        Возможные статусы: processing, done, failed.
+        При processing результат ещё отсутствует.
+        При done обязательны verdict и violations.
+        При failed не возвращается успешный вердикт; error — необязательная
+        диагностическая информация команды, её формат не задан в ТЗ.
+
+        no_violation означает пустой список violations.
+        violation означает хотя бы одно событие.
+        Отдельного вердикта insufficient_data контракт жюри не предусматривает.
+      parameters:
+        - name: job_id
+          in: path
+          required: true
+          description: Непрозрачный идентификатор из ответа на загрузку; формат UUID не требуется
+          schema:
+            $ref: '#/components/schemas/JobId'
+      responses:
+        '200':
+          description: Текущее состояние задания; HTTP 200 выбран командой
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobResponse'
+              examples:
+                processing:
+                  summary: Анализ продолжается
+                  value:
+                    job_id: 3f2a9c1e
+                    status: processing
+                noViolation:
+                  summary: Признаки нарушения не обнаружены
+                  value:
+                    job_id: 3f2a9c1e
+                    status: done
+                    verdict: no_violation
+                    violations: []
+                failed:
+                  summary: Техническая ошибка обработки
+                  value:
+                    job_id: 3f2a9c1e
+                    status: failed
+                    error:
+                      code: analysis_failed
+                      message: Не удалось обработать видео
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          description: Задание с указанным job_id не найдено
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: |
+        Закрытый ключ команды для жюри. Запросы без верного ключа отклоняются.
+        Реальный ключ не хранится в спецификации или репозитории.
+  responses:
+    Unauthorized:
+      description: Ключ X-API-Key отсутствует или неверен
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error:
+              code: unauthorized
+              message: Отсутствует или неверен API-ключ
+    InternalError:
+      description: Внутренняя ошибка API без раскрытия технических деталей
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    JobId:
+      type: string
+      minLength: 1
+      description: Идентификатор задания; конкретный способ генерации ещё не выбран
+      example: 3f2a9c1e
+
+    AnalysisAccepted:
+      type: object
+      additionalProperties: false
+      required: [job_id]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+
+    JobResponse:
+      description: Формат зависит от статуса и, при done, от вердикта
+      oneOf:
+        - $ref: '#/components/schemas/ProcessingJob'
+        - $ref: '#/components/schemas/NoViolationJob'
+        - $ref: '#/components/schemas/ViolationJob'
+        - $ref: '#/components/schemas/FailedJob'
+
+    ProcessingJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [processing]
+
+    NoViolationJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status, verdict, violations]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [done]
+        verdict:
+          type: string
+          enum: [no_violation]
+          description: Нарушение не обнаружено
+        violations:
+          type: array
+          maxItems: 0
+          description: Обязательно пустой список
+          items:
+            $ref: '#/components/schemas/Violation'
+
+    ViolationJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status, verdict, violations]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [done]
+        verdict:
+          type: string
+          enum: [violation]
+          description: Обнаружены признаки возможных нарушений
+        violations:
+          type: array
+          minItems: 1
+          description: Одно или несколько наблюдаемых событий
+          items:
+            $ref: '#/components/schemas/Violation'
+
+    FailedJob:
+      type: object
+      additionalProperties: false
+      required: [job_id, status]
+      properties:
+        job_id:
+          $ref: '#/components/schemas/JobId'
+        status:
+          type: string
+          enum: [failed]
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
+
+    Violation:
+      type: object
+      additionalProperties: false
+      required: [type, timecode_sec, description, evidence_frames]
+      properties:
+        type:
+          type: string
+          minLength: 1
+          description: Название типа события; закрытый перечень ещё не определён
+        timecode_sec:
+          type: number
+          format: double
+          minimum: 0
+          description: Таймкод события в секундах от начала видео
+          example: 44.2
+        description:
+          type: string
+          minLength: 1
+          description: |
+            Наблюдаемое действие и почему оно может указывать на нарушение.
+            Без предположений о невидимых операциях и окончательного заключения.
+            План команды: здесь же указывать проверенное правило, название
+            источника РК, пункт/раздел при наличии и ссылку, сохраняя JSON жюри.
+        evidence_frames:
+          type: array
+          minItems: 1
+          maxItems: 3
+          description: Настоящие кадры из соответствующего фрагмента исходного видео
+          items:
+            $ref: '#/components/schemas/EvidenceFrame'
+
+    EvidenceFrame:
+      type: object
+      additionalProperties: false
+      required: [timestamp_sec, image_base64]
+      properties:
+        timestamp_sec:
+          type: number
+          format: double
+          minimum: 0
+          description: Время конкретного кадра в секундах от начала видео
+          example: 44.2
+        image_base64:
+          type: string
+          format: byte
+          minLength: 1
+          description: JPEG в base64 без префикса data:image/jpeg;base64,
+
+    ErrorDetail:
+      type: object
+      additionalProperties: false
+      required: [code, message]
+      description: Предложенный командой формат; в ТЗ структура ошибки не определена
+      properties:
+        code:
+          type: string
+          minLength: 1
+          description: Машиночитаемый код ошибки
+          example: analysis_failed
+        message:
+          type: string
+          minLength: 1
+          description: Краткое безопасное описание без ключей и внутренних путей
+          example: Не удалось обработать видео
+
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          $ref: '#/components/schemas/ErrorDetail'
