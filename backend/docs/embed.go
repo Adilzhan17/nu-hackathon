@@ -2,7 +2,7 @@ package docs
 
 import _ "embed"
 
-// OpenAPI is the same contract mounted by the local Swagger UI.
+// OpenAPI embeds the API contract served by GET /openapi.yaml.
 //
 //go:embed openapi.yaml
 var OpenAPI []byte

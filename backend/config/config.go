@@ -144,7 +144,7 @@ func Load(envFile string) (Config, error) {
 	if cfg.CleanupInterval > cfg.JobRetention {
 		return Config{}, errors.New("CLEANUP_INTERVAL must not exceed JOB_RETENTION")
 	}
-	for _, origin := range strings.Split(get("CORS_ORIGINS", "http://localhost:8081,http://127.0.0.1:8081"), ",") {
+	for _, origin := range strings.Split(get("CORS_ORIGINS", ""), ",") {
 		origin = strings.TrimSpace(origin)
 		if origin == "" {
 			continue
