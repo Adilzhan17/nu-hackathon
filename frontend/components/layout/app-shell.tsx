@@ -7,12 +7,13 @@ import {
   ChevronRight,
   CircleHelp,
   Clapperboard,
-  LayoutDashboard,
+  Home,
   Menu,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
-  ScanLine,
-  ShieldCheck,
   X,
+  LockKeyhole,
 } from "lucide-react";
 import { USE_MOCK_API } from "@/services/api";
 import {
@@ -24,25 +25,73 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+
+function HelpDialog() {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <button className="help-button" title="Как это работает">
+          <CircleHelp size={18} />
+          <span>Как это работает</span>
+          <ArrowUpRight size={14} />
+        </button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogTitle className="dialog-title">Как проходит проверка</DialogTitle>
+        <DialogDescription className="muted">
+          От видеозаписи до события, которое можно проверить.
+        </DialogDescription>
+        <ol className="help-steps">
+          <li>
+            <strong>Добавьте запись</strong>
+            <p>Один файл .mov до 500 МБ. В деморежиме он остаётся в браузере.</p>
+          </li>
+          <li>
+            <strong>Дождитесь анализа</strong>
+            <p>
+              Статус обновляется автоматически. В деморежиме результат заранее задан выбранным
+              сценарием.
+            </p>
+          </li>
+          <li>
+            <strong>Проверьте наблюдения</strong>
+            <p>
+              Выберите событие, перейдите к таймкоду и изучите кадры. Итоговое решение остаётся за
+              вами.
+            </p>
+          </li>
+        </ol>
+        <div className="note">Учебные события и схемы не являются выводами AI по вашей записи.</div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const sidebar = useRef<HTMLElement>(null);
   const menu = useRef<HTMLButtonElement>(null);
   useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem("forte:sidebar-collapsed") === "true");
+    } catch {
+      /* Optional preference. */
+    }
+  }, []);
+  useEffect(() => {
     if (!open) return;
-    const previousOverflow = document.body.style.overflow;
+    const overflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
     sidebar.current?.querySelector<HTMLElement>("a")?.focus();
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setOpen(false);
-        menu.current?.focus();
-      }
+      if (document.querySelector('[data-state="open"][role="dialog"]')) return;
+      if (event.key === "Escape") setOpen(false);
       if (event.key !== "Tab") return;
       const items = Array.from(
         sidebar.current?.querySelectorAll<HTMLElement>("a[href], button:not([disabled])") ?? [],
-      );
+      ).filter((el) => el.getClientRects().length && getComputedStyle(el).visibility !== "hidden");
       const first = items[0],
         last = items[items.length - 1];
       if (event.shiftKey && document.activeElement === first) {
@@ -53,30 +102,49 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         first?.focus();
       }
     };
+    const onResize = () => {
+      if (window.innerWidth > 760) setOpen(false);
+    };
     document.addEventListener("keydown", onKey);
+    window.addEventListener("resize", onResize);
     return () => {
-      document.body.style.overflow = previousOverflow;
+      document.body.style.overflow = overflow;
       document.removeEventListener("keydown", onKey);
+      window.removeEventListener("resize", onResize);
+      menu.current?.focus();
     };
   }, [open]);
   const isResult = pathname.startsWith("/analysis/") && pathname !== "/analysis/new";
   const links = [
-    { href: "/", label: "Обзор", icon: LayoutDashboard, active: pathname === "/" },
+    { href: "/", label: "Обзор", short: "Обзор", icon: Home, active: pathname === "/" },
     {
       href: "/analysis/new",
       label: "Новый анализ",
+      short: "Загрузить",
       icon: Plus,
       active: pathname === "/analysis/new",
     },
     {
       href: "/analysis",
       label: "Результаты анализа",
+      short: "Записи",
       icon: Clapperboard,
       active: pathname === "/analysis" || isResult,
     },
   ];
+  function toggleSidebar() {
+    setCollapsed((value) => {
+      const next = !value;
+      try {
+        localStorage.setItem("forte:sidebar-collapsed", String(next));
+      } catch {
+        /* Optional preference. */
+      }
+      return next;
+    });
+  }
   return (
-    <div className="app-shell">
+    <div className={cn("app-shell", collapsed && "sidebar-collapsed")}>
       <a href="#main-content" className="skip-link">
         Перейти к содержимому
       </a>
@@ -94,105 +162,71 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         aria-modal={open || undefined}
         aria-label="Основная навигация"
       >
-        <Link
-          href="/"
-          className="brand"
-          onClick={() => setOpen(false)}
-          aria-label="Forte Vision — главная"
-        >
-          <span className="brand-mark">
-            <ScanLine size={26} strokeWidth={2.3} />
-          </span>
-          <span>
-            forte<span className="brand-light">vision</span>
-            <small>ВИДЕОКОНТРОЛЬ ОПЕРАЦИЙ</small>
-          </span>
-        </Link>
-        <button className="mobile-close" onClick={() => setOpen(false)} aria-label="Закрыть меню">
-          <X />
-        </button>
+        <div className="sidebar-brand-row">
+          <Link
+            href="/"
+            className="brand"
+            onClick={() => setOpen(false)}
+            aria-label="Forte Vision — главная"
+          >
+            <span className="brand-symbol" aria-hidden="true">
+              f<span>.</span>
+            </span>
+            <span className="brand-name">
+              forte<span>vision</span>
+            </span>
+          </Link>
+          <button
+            className="collapse-button"
+            onClick={toggleSidebar}
+            aria-label={collapsed ? "Развернуть навигацию" : "Свернуть навигацию"}
+            aria-expanded={!collapsed}
+          >
+            {collapsed ? <PanelLeftOpen size={17} /> : <PanelLeftClose size={17} />}
+          </button>
+          <button className="mobile-close" onClick={() => setOpen(false)} aria-label="Закрыть меню">
+            <X size={20} />
+          </button>
+        </div>
         <div className="workspace">
           <span className="workspace-monogram">F</span>
           <div>
-            ForteBank<small>Рабочее пространство</small>
+            <strong>ForteBank</strong>
+            <small>Контроль операций</small>
           </div>
-          <ShieldCheck size={16} />
+          <span className="workspace-dot" />
         </div>
-        <div className="nav-section-label">Рабочая область</div>
-        <nav>
+        <p className="nav-section-label">Рабочее пространство</p>
+        <nav aria-label="Разделы приложения">
           {links.map(({ icon: Icon, ...item }) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn("nav-link", item.active && "active")}
+              title={item.label}
+              aria-label={item.label}
               aria-current={item.active ? "page" : undefined}
               onClick={() => setOpen(false)}
             >
-              <Icon size={19} />
+              <Icon size={18} strokeWidth={item.active ? 2 : 1.6} />
               <span>{item.label}</span>
-              {item.active && <span className="nav-dot" />}
             </Link>
           ))}
         </nav>
         <div className="sidebar-bottom">
+          <HelpDialog />
           <div className="local-note">
-            <ShieldCheck size={22} />
-            <strong>Данные под контролем</strong>
+            <LockKeyhole size={15} />
             <p>
-              {USE_MOCK_API
-                ? "В деморежиме видео остаётся в вашем браузере."
-                : "Видео передаётся только в настроенный сервис анализа."}
+              {USE_MOCK_API ? "Демо без отправки видео на сервер" : "Обработка в вашем сервисе"}
             </p>
-            <span>
-              {USE_MOCK_API ? "Локальный деморежим" : "Защищённый серверный API"}
-              <ArrowUpRight size={14} />
-            </span>
           </div>
-          <Dialog>
-            <DialogTrigger asChild>
-              <button className="help-button">
-                <CircleHelp size={18} />
-                Как это работает
-                <ArrowUpRight size={15} />
-              </button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogTitle className="dialog-title">От видео к проверке события</DialogTitle>
-              <DialogDescription className="muted">
-                Forte Vision помогает специалисту находить фрагменты, требующие внимания.
-              </DialogDescription>
-              <ol className="help-steps">
-                <li>
-                  <strong>Загрузите запись</strong>
-                  <p>Выберите один файл .mov. В деморежиме он не отправляется на сервер.</p>
-                </li>
-                <li>
-                  <strong>Дождитесь результата</strong>
-                  <p>
-                    Интерфейс запрашивает статус задачи. Процент не отображается, если сервер его не
-                    сообщает.
-                  </p>
-                </li>
-                <li>
-                  <strong>Проверьте контекст</strong>
-                  <p>
-                    Выберите событие, изучите видео и кадры. Окончательное решение принимает
-                    специалист.
-                  </p>
-                </li>
-              </ol>
-              <div className="note">
-                Демособытия и схематичные кадры созданы для проверки интерфейса. Они не являются
-                выводами AI.
-              </div>
-            </DialogContent>
-          </Dialog>
           <div className="sidebar-footer">
             <span className="project-avatar">FV</span>
             <div>
-              Datathon 2026<small>Прототип команды</small>
+              <strong>Datathon 2026</strong>
+              <small>Команда Forte Vision</small>
             </div>
-            <span className="version">v0.1</span>
           </div>
         </div>
       </aside>
@@ -206,25 +240,22 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               className="menu-toggle"
               aria-label="Открыть меню"
               aria-expanded={open}
-              onClick={() => setOpen(!open)}
+              onClick={() => setOpen(true)}
             >
-              <Menu size={21} />
+              <Menu size={20} />
             </Button>
-            <span className="breadcrumb-root">Рабочая область</span>
-            <ChevronRight size={14} className="breadcrumb-root" />
+            <span className="breadcrumb-root">ForteBank</span>
+            <ChevronRight size={13} className="breadcrumb-root" />
             <span>
               {isResult ? "Проверка записи" : (links.find((l) => l.active)?.label ?? "Страница")}
             </span>
           </div>
           <div className="topbar-right">
-            <span className={cn("mode-badge", !USE_MOCK_API && "live-mode")}>
+            <span className="mode-badge">
               <span className="status-dot" />
               {USE_MOCK_API ? "Деморежим" : "Режим API"}
             </span>
-            <span className="header-divider" />
-            <span className="reviewer-avatar" title="Рабочее пространство Forte Vision">
-              FV
-            </span>
+            <span className="header-project">Datathon ’26</span>
           </div>
         </header>
         <main id="main-content" tabIndex={-1}>
@@ -232,12 +263,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
         <footer className="page-footer">
           <span>
-            Forte Vision <span className="footer-dot">·</span> Datathon 2026
+            Forte Vision <span>© 2026</span>
           </span>
-          <span>
-            <ShieldCheck size={13} /> Решение остаётся за специалистом
-          </span>
+          <span>Решение остаётся за специалистом</span>
         </footer>
+        <nav className="mobile-bottom-nav" aria-label="Быстрая навигация">
+          {links.map(({ icon: Icon, ...item }) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              aria-label={item.label}
+              aria-current={item.active ? "page" : undefined}
+              className={cn(item.active && "active")}
+            >
+              <Icon size={19} />
+              <span>{item.short}</span>
+            </Link>
+          ))}
+        </nav>
       </div>
     </div>
   );

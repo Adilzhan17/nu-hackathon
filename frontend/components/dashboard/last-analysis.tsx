@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, FileVideo2 } from "lucide-react";
 import { getMetadata } from "@/lib/session";
-export function LastAnalysis() {
+export function LastAnalysis({ compact = false }: { compact?: boolean }) {
   const [last, setLast] = useState<{ id: string; name: string }>();
   useEffect(() => {
     try {
@@ -28,9 +28,17 @@ export function LastAnalysis() {
     <div className="empty-session">
       <FileVideo2 size={24} />
       <div>
-        <strong>В этой вкладке пока нет ваших анализов</strong>
-        <p>После загрузки здесь появится ссылка на последнюю задачу.</p>
+        <strong>Пока нет загруженных записей</strong>
+        <p>
+          {compact
+            ? "Последняя проверка появится здесь."
+            : "Загрузите видео — здесь появится последняя задача этой вкладки."}
+        </p>
       </div>
+      <Link href="/analysis/new" className="text-link">
+        Добавить видео
+        <ArrowRight size={15} />
+      </Link>
     </div>
   );
 }

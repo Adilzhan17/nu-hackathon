@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import "@fontsource-variable/manrope";
+import "@fontsource-variable/inter";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 export const metadata: Metadata = {

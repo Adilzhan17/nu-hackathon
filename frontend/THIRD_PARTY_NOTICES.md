@@ -10,7 +10,7 @@
 | class-variance-authority           | Apache-2.0                               |
 | Lucide React                       | ISC; часть исходных Feather-иконок — MIT |
 | Zod                                | MIT                                      |
-| Manrope                            | SIL Open Font License 1.1                |
+| Inter                              | SIL Open Font License 1.1                |
 | TypeScript, Playwright             | Apache-2.0                               |
 | tsx, sharp                         | MIT / Apache-2.0 соответственно          |
 
@@ -21,6 +21,8 @@ Button и Dialog основаны на подходе shadcn/ui: доступн�
 - https://github.com/pbakaus/impeccable — Apache-2.0.
 - https://github.com/nextlevelbuilder/ui-ux-pro-max-skill — MIT.
 - https://github.com/Leonxlnx/taste-skill — MIT.
+
+[Perricheno](https://github.com/Perricheno/perricheno) использован как визуальный референс по просьбе команды: нейтральная палитра, светлая навигация и отдельная белая рабочая область. Исходный код, логотипы и графические материалы Perricheno не включены в проект. Файл лицензии в изученной версии репозитория не найден.
 
 `public/demo/scene.svg`, `evidence.jpg` и `cashier-preview.mp4` созданы специально для данного прототипа. Это схематичные учебные материалы без внешней съёмки. FFmpeg используется только внешним инструментом генерации; бинарник FFmpeg не распространяется с приложением. Моделей ML и их весов в frontend нет.
 

@@ -20,10 +20,10 @@ export default function AnalysisPage() {
         </Button>
       </div>
       <LastAnalysis />
-      <section className="panel examples-panel">
+      <section className="examples-panel">
         <div className="section-heading">
-          <h2>Учебные сценарии</h2>
-          <span className="badge badge-neutral">Демонстрационные данные</span>
+          <h2>Учебные записи</h2>
+          <span className="badge badge-neutral">Демо</span>
         </div>
         <DemoList />
       </section>

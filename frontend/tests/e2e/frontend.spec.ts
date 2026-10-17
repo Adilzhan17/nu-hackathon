@@ -91,7 +91,54 @@ test("mobile menu and all required widths avoid horizontal overflow", async ({ p
     }
   }
   await page.getByRole("button", { name: "Открыть меню" }).click();
-  await page.getByRole("navigation").getByRole("link", { name: "Новый анализ" }).click();
+  await page
+    .getByRole("navigation", { name: "Разделы приложения" })
+    .getByRole("link", { name: "Новый анализ" })
+    .click();
   await expect(page).toHaveURL(/\/analysis\/new$/);
   await expect(page.locator(".sidebar")).not.toHaveClass(/is-open/);
+});
+
+test("record filters, search and empty-state recovery", async ({ page }) => {
+  await page.goto("/analysis");
+  const rows = page.locator(".demo-row");
+  await expect(rows).toHaveCount(3);
+  await page.getByRole("button", { name: "С событиями" }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText("cashier_014.mov");
+  await page.getByRole("searchbox", { name: "Найти запись" }).fill("missing");
+  await expect(page.getByRole("status")).toContainText("Запись не найдена");
+  await page.getByRole("button", { name: "Показать все записи" }).click();
+  await expect(rows).toHaveCount(3);
+  await page.getByRole("searchbox", { name: "Найти запись" }).fill("027.MOV");
+  await expect(rows).toHaveCount(1);
+  await expect(rows).toContainText("Признаки не обнаружены");
+  await page.getByRole("button", { name: "Очистить поиск" }).click();
+  await page.getByRole("button", { name: "С ошибкой" }).click();
+  await expect(rows).toHaveCount(1);
+  await rows.click();
+  await expect(page.getByRole("heading", { name: "Анализ не завершён" })).toBeVisible();
+});
+test("collapsed navigation persists and mobile navigation remains usable", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Свернуть навигацию" }).click();
+  await expect(page.locator(".app-shell")).toHaveClass(/sidebar-collapsed/);
+  await page.reload();
+  await expect(page.getByRole("button", { name: "Развернуть навигацию" })).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Разделы приложения" })
+    .getByRole("link", { name: "Результаты анализа" })
+    .click();
+  await expect(page).toHaveURL(/\/analysis$/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page
+    .getByRole("navigation", { name: "Быстрая навигация" })
+    .getByRole("link", { name: "Новый анализ" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Новый анализ" })).toBeVisible();
+  await page.getByRole("button", { name: "Открыть меню" }).click();
+  await expect(page.getByRole("dialog", { name: "Основная навигация" })).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("button", { name: "Открыть меню" })).toBeFocused();
 });
