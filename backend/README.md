@@ -109,6 +109,13 @@ go vet ./...
 go build -o bin/backend.exe .
 ```
 
+На macOS стандартный путь временных файлов может проходить через симлинк `/var`. Проверка хранилища намеренно запрещает симлинки в пути. Для тестов используйте прямой путь:
+
+```bash
+mkdir -p /private/tmp/forte-go-tests
+TMPDIR=/private/tmp/forte-go-tests go test ./...
+```
+
 При установленном Make доступны `make run`, `make test`, `make vet`, `make build`, `make swagger`, `make swagger-down`, `make swagger-config`. Тестовый анализатор используется только внутри тестов; production mock-режима у бэкенда нет.
 
 Требования кейса и его неоднозначности: [docs/requirements.md](docs/requirements.md). Алгоритмические референсы: [docs/references.md](docs/references.md). Это инфраструктура для подключения CV; модель, оценка качества и публичное развёртывание ещё не выполнены.
