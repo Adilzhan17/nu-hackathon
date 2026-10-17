@@ -2406,3 +2406,18 @@ main:focus {
     margin-bottom: 20px;
   }
 }
+
+.model-notice {
+  border-color: #e9d7a2;
+  background: #fff7e7;
+  color: #755a2e;
+  font-size: 13px;
+}
+.model-notice strong {
+  color: #5e451b;
+}
+.model-notice > svg {
+  flex-shrink: 0;
+}
+
+.sidebar { overflow-y: auto; }

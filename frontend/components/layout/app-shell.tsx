@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity, ClipboardCheck, Layers, Pencil,
   ArrowUpRight,
   ChevronRight,
   CircleHelp,
@@ -205,6 +206,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <Icon size={18} strokeWidth={item.active ? 2 : 1.6} />
               <span>{item.label}</span>
             </Link>
+          ))}
+          {[
+            { href: "/training", label: "Обучение", icon: Activity },
+            { href: "/scenarios", label: "Контекстный пилот", icon: Layers },
+            { href: "/label", label: "Разметка", icon: Pencil },
+            { href: "/readiness", label: "Аудит качества", icon: ClipboardCheck },
+          ].map(({ href, label, icon: Icon }) => (
+            <a key={href} href={href} className="nav-link" onClick={() => setOpen(false)}>
+              <Icon size={19} />
+              <span>{label}</span>
+            </a>
           ))}
         </nav>
         <div className="sidebar-bottom">

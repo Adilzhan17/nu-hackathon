@@ -1,0 +1,21 @@
+Integration of team main (3242b9e) and live frontend changes
+
+The team frontend and Go backend are already merged in main. This branch keeps
+that updated interface and restores the live frontend's authenticated preview
+proxy, upload limits, error handling, uncertainty fields and navigation to the
+Python review/training/monitoring pages. PUBLIC_ORIGIN and the team's loopback
+Host fix are both supported.
+
+The Go backend still has no CV processor and intentionally returns 503 for
+analysis. For the existing live installation use the Python API at
+http://127.0.0.1:8765 with its server-side API_KEY. Do not switch uploads to Go
+until its real CV processor is implemented and checked.
+
+Python services, datasets, weights and secrets in /root/nuhack are not included
+in this frontend/backend integration commit. Auxiliary /label, /training,
+/scenarios and /readiness pages require the existing Python gateway. This
+isolated worktree does not replace or restart the running website.
+
+Validation: Go 1.25 go test ./...; 18 frontend/API tests; production Next.js
+webpack build; 3 browser tests on isolated port 3091 (API responses mocked).
+The real GPU inference and Go CV processor were not exercised by browser tests.

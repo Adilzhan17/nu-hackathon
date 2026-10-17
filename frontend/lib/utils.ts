@@ -14,11 +14,11 @@ export function timecode(seconds: number) {
 export function fileSize(bytes: number) {
   return `${(bytes / 1024 / 1024).toLocaleString("ru-RU", { maximumFractionDigits: 1 })} МБ`;
 }
-export const MAX_FILE_SIZE = 500 * 1024 * 1024;
+export const MAX_FILE_SIZE = 64 * 1024 * 1024;
 export function validateVideo(file: Pick<File, "name" | "size">): string | null {
   if (!/\.mov$/i.test(file.name)) return "Нужен файл в формате .mov. Выберите другую видеозапись.";
   if (file.size === 0) return "Файл пустой. Выберите видеозапись с содержимым.";
   if (file.size > MAX_FILE_SIZE)
-    return "Файл больше 500 МБ — лимита этого интерфейса. Выберите файл меньшего размера.";
+    return "Файл больше 64 МиБ — лимита сервиса. Выберите файл меньшего размера.";
   return null;
 }

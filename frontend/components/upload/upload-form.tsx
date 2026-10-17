@@ -56,13 +56,14 @@ export function UploadForm({ embedded = false }: { embedded?: boolean }) {
     setUploading(true);
     setError("");
     controller.current = new AbortController();
+    const createdAt = Date.now();
     try {
       const { job_id } = await analyzeVideo(file, scenario, controller.current.signal);
       if (controller.current.signal.aborted) return;
       rememberUpload(job_id, file, {
         name: file.name,
         size: file.size,
-        createdAt: Date.now(),
+        createdAt,
         mock: USE_MOCK_API,
         scenario,
       });
@@ -144,7 +145,7 @@ export function UploadForm({ embedded = false }: { embedded?: boolean }) {
                 <UploadCloud size={33} strokeWidth={1.5} />
               </span>
               <h3>Перетащите видео сюда</h3>
-              <p>MOV · до 500 МБ</p>
+              <p>MOV · до 64 МиБ</p>
               <Button type="button" onClick={() => input.current?.click()} disabled={!ready}>
                 Выбрать файл
                 <ArrowUpIcon />

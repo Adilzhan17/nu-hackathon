@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { analysisJobSchema, type AnalysisJob, type MockScenario } from "@/types/analysis";
-import { mockAnalyze, mockGetJob } from "./mock-api";
-export const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API !== "false";
+import { DEMO_JOBS, mockAnalyze, mockGetJob } from "./mock-api";
+export const USE_MOCK_API = process.env.NEXT_PUBLIC_USE_MOCK_API === "true";
 export class ApiError extends Error {
   constructor(
     message: string,
@@ -29,6 +29,8 @@ async function request(path: string, init: RequestInit, signal?: AbortSignal) {
         422: "Сервер не принял файл. Проверьте формат видеозаписи.",
         429: "Слишком много запросов. Повторите попытку чуть позже.",
         503: "Сервис анализа не настроен или временно недоступен.",
+        502: "Сервис анализа недоступен. Проверьте соединение с сервером.",
+        504: "Сервис анализа не ответил в отведённое время.",
       };
       throw new ApiError(
         messages[response.status] ?? "Сервис анализа вернул ошибку. Повторите попытку.",
@@ -59,13 +61,14 @@ export async function analyzeVideo(
   const form = new FormData();
   form.append("file", file);
   const parsed = z
-    .object({ job_id: z.string().min(1) })
+    .object({ job_id: z.string().regex(/^[a-zA-Z0-9_-]{1,160}$/) })
     .safeParse(await request("/api/analysis", { method: "POST", body: form }, signal));
   if (!parsed.success) throw new ApiError("В ответе сервера отсутствует идентификатор задачи.");
   return parsed.data;
 }
 export async function getJob(id: string, signal?: AbortSignal): Promise<AnalysisJob> {
-  if (USE_MOCK_API || id.startsWith("demo-")) return mockGetJob(id, signal);
+  if (DEMO_JOBS.some((demo) => demo.id === id) || (USE_MOCK_API && id.startsWith("mock-")))
+    return mockGetJob(id, signal);
   const parsed = analysisJobSchema.safeParse(
     await request(`/api/jobs/${encodeURIComponent(id)}`, { method: "GET" }, signal),
   );

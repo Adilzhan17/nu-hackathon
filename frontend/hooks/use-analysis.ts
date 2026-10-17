@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { getJob, ApiError } from "@/services/api";
 import type { AnalysisJob } from "@/types/analysis";
+import { getMetadata } from "@/lib/session";
 export function useAnalysis(id: string) {
   const [job, setJob] = useState<AnalysisJob>();
   const [error, setError] = useState<string>();
@@ -11,7 +12,7 @@ export function useAnalysis(id: string) {
     const controller = new AbortController();
     let timer: ReturnType<typeof setTimeout>;
     let failures = 0;
-    const started = Date.now();
+    const started = getMetadata(id)?.createdAt ?? Date.now();
     setJob(undefined);
     setError(undefined);
     setRetrying(false);
@@ -34,6 +35,7 @@ export function useAnalysis(id: string) {
         if (controller.signal.aborted) return;
         failures++;
         if (
+          Date.now() - started < 300_000 &&
           failures < 3 &&
           !(e instanceof ApiError && e.status && e.status < 500 && e.status !== 429)
         ) {

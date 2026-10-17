@@ -3,6 +3,7 @@ import { ArrowRight, CirclePlay } from "lucide-react";
 import { DemoList } from "@/components/dashboard/demo-list";
 import { LastAnalysis } from "@/components/dashboard/last-analysis";
 import { UploadForm } from "@/components/upload/upload-form";
+import { ModelNotice } from "@/components/layout/model-notice";
 export default function Dashboard() {
   return (
     <div className="page dashboard-page">
@@ -16,6 +17,7 @@ export default function Dashboard() {
           Посмотреть пример
         </Link>
       </div>
+      <ModelNotice />
       <UploadForm embedded />
       <LastAnalysis compact />
       <section className="demo-section" aria-labelledby="demo-title">
