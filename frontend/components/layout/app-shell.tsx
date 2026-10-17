@@ -169,9 +169,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             onClick={() => setOpen(false)}
             aria-label="Forte Vision — главная"
           >
-            <span className="brand-symbol" aria-hidden="true">
-              f<span>.</span>
-            </span>
+            <img
+              className="brand-symbol"
+              src="/brand/forte-symbol.svg"
+              alt=""
+              width={36}
+              height={36}
+            />
             <span className="brand-name">
               forte<span>vision</span>
             </span>
@@ -189,7 +193,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </button>
         </div>
         <div className="workspace">
-          <span className="workspace-monogram">F</span>
+          <img
+            className="workspace-logo"
+            src="/brand/forte-symbol.svg"
+            alt=""
+            width={32}
+            height={32}
+          />
           <div>
             <strong>ForteBank</strong>
             <small>Контроль операций</small>
