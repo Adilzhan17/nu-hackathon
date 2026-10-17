@@ -39,6 +39,9 @@ func TestLoadFileAndEnvironmentPrecedence(t *testing.T) {
 	if _, exists := os.LookupEnv("API_KEY"); exists {
 		t.Fatal("Load mutated the environment")
 	}
+	if len(cfg.CORSOrigins) != 0 {
+		t.Fatal("browser origins must be explicitly configured")
+	}
 	t.Setenv("API_KEY", "")
 	if _, err := Load(path); err == nil {
 		t.Fatal("empty environment key must override dotenv")

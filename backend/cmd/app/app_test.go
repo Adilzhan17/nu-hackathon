@@ -71,7 +71,7 @@ func newFixture(t *testing.T, vision ip.Vision) fixture {
 	})
 	service := main.GetServicesManager()
 	controller := v1.New(service.Analysis(), service.Jobs(), v1.Options{MaxBytes: cfg.UploadMaxBytes, UploadTimeout: cfg.UploadTimeout, MaxUploads: cfg.MaxUploads}, log)
-	handler := CORS([]string{"http://localhost:8081"}, api.NewRouter(controller, testKey, main.Ready, log))
+	handler := CORS([]string{"http://localhost:3000"}, api.NewRouter(controller, testKey, main.Ready, log))
 	return fixture{main, handler, dir}
 }
 func movData() []byte {
@@ -280,16 +280,16 @@ func TestHTTPPipelineProducesFrontendCompatibleResults(t *testing.T) {
 		})
 	}
 }
-func TestCORSAllowsOnlyConfiguredSwaggerOrigin(t *testing.T) {
+func TestCORSAllowsOnlyConfiguredOrigin(t *testing.T) {
 	f := newFixture(t, nil)
 	for _, tc := range []struct {
 		origin, method, headers string
 		status                  int
 	}{
-		{"http://localhost:8081", "POST", "content-type,x-api-key", 204},
+		{"http://localhost:3000", "POST", "content-type,x-api-key", 204},
 		{"https://untrusted.example", "POST", "x-api-key", 403},
-		{"http://localhost:8081", "DELETE", "x-api-key", 403},
-		{"http://localhost:8081", "POST", "authorization", 403},
+		{"http://localhost:3000", "DELETE", "x-api-key", 403},
+		{"http://localhost:3000", "POST", "authorization", 403},
 	} {
 		r := httptest.NewRequest("OPTIONS", "/api/v1/analyze", nil)
 		r.Header.Set("Origin", tc.origin)
