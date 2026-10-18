@@ -1,0 +1,450 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Forte Vision Jury API",
+    "version": "1.0.0",
+    "description": "Existing authenticated API contract. Refactor preserves URLs, verdicts, evidence and job IDs."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "security": [
+    {
+      "JuryKey": []
+    }
+  ],
+  "paths": {
+    "/api/v1/analyze": {
+      "post": {
+        "operationId": "submitAnalysis",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "One MOV video, <=64 MiB, <=180 seconds. HTTP Content-Length required."
+                  }
+                },
+                "required": [
+                  "file"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Processing"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Malformed upload",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or wrong X-API-Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "408": {
+            "description": "Upload timed out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "411": {
+            "description": "Content-Length required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Upload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "415": {
+            "description": "Expected a MOV multipart file",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Analysis/storage unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}": {
+      "get": {
+        "operationId": "getAnalysis",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Processing, completed or failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/Processing"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Completed"
+                    },
+                    {
+                      "$ref": "#/components/schemas/Failed"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or wrong X-API-Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Unknown job",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/jobs/{job_id}/preview": {
+      "get": {
+        "operationId": "getPreview",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{32}$"
+            }
+          },
+          {
+            "name": "Range",
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Video-only MP4 preview",
+            "content": {
+              "video/mp4": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "206": {
+            "description": "Partial MP4 bytes"
+          },
+          "401": {
+            "description": "Missing or wrong X-API-Key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Preview unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "416": {
+            "description": "Invalid byte range",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "JuryKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key"
+      }
+    },
+    "schemas": {
+      "Processing": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "status": {
+            "const": "processing"
+          },
+          "stage": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id",
+          "status"
+        ]
+      },
+      "Failed": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "status": {
+            "const": "failed"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "error"
+        ]
+      },
+      "Completed": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{32}$"
+          },
+          "status": {
+            "const": "done"
+          },
+          "verdict": {
+            "enum": [
+              "no_violation",
+              "violation"
+            ]
+          },
+          "violations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Violation"
+            }
+          },
+          "warnings": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "job_id",
+          "status",
+          "verdict",
+          "violations"
+        ]
+      },
+      "Violation": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "timecode_sec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "description": {
+            "type": "string"
+          },
+          "evidence_frames": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "$ref": "#/components/schemas/EvidenceFrame"
+            }
+          },
+          "regulatory_source": {
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RegulatorySource"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "type",
+          "timecode_sec",
+          "description",
+          "evidence_frames"
+        ]
+      },
+      "EvidenceFrame": {
+        "type": "object",
+        "properties": {
+          "timestamp_sec": {
+            "type": "number",
+            "minimum": 0
+          },
+          "image_base64": {
+            "type": "string",
+            "contentEncoding": "base64",
+            "contentMediaType": "image/jpeg"
+          }
+        },
+        "required": [
+          "timestamp_sec",
+          "image_base64"
+        ]
+      },
+      "RegulatorySource": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          }
+        },
+        "required": [
+          "title"
+        ]
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string"
+              },
+              "message": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "error"
+        ]
+      }
+    }
+  }
+}

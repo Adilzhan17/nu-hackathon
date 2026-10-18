@@ -1,0 +1,18 @@
+name: Architecture contracts
+on:
+  push:
+    paths: ['forte_vision/**', 'tests/**', 'contracts/**', 'ml/gemma_lab/**', 'ml/context_pipeline/rules.py', 'ml/narration_training/organizer/context.py', '.github/workflows/architecture.yml']
+  pull_request:
+    paths: ['forte_vision/**', 'tests/**', 'contracts/**', 'ml/gemma_lab/**', 'ml/context_pipeline/rules.py', 'ml/narration_training/organizer/context.py', '.github/workflows/architecture.yml']
+permissions:
+  contents: read
+jobs:
+  boundaries:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check pure dependency boundaries and compatibility
+        run: python -m unittest discover -s tests -t . -v

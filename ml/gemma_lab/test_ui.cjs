@@ -11,7 +11,7 @@ const fs=require('node:fs');const assert=require('node:assert/strict');
    if(route.request().method()==='POST'){posts++;return route.fulfill({status:500,body:'Unexpected upload'});}
    if(u.pathname==='/demo/gemma/status')return route.fulfill({json:{max_duration_sec:180,max_bytes:67108864,recent:[]}});
    if(u.pathname===`/demo/gemma/jobs/${id}`)return route.fulfill({json:job});
-   return route.fulfill({contentType:'text/html',body:fs.readFileSync(__dirname+'/index.html','utf8')});
+   return route.fulfill({contentType:'text/html',body:fs.readFileSync(__dirname+'/../../frontend/analysis/index.html','utf8')});
   });
   await page.goto('https://gemma.test/demo/gemma?job='+id,{waitUntil:'networkidle'});
   assert.equal(await page.locator('#adaptation').count(),0);

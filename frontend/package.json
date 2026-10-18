@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/contracts.test.ts tests/api-client.test.ts && node --conditions=react-server --import tsx --test tests/proxy.test.ts",
+    "test": "tsx --test tests/contracts.test.ts tests/api-client.test.ts tests/gemma-proxy.test.ts && node --conditions=react-server --import tsx --test tests/proxy.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:demo": "E2E_MODE=demo playwright test"
   },

@@ -1,0 +1,18 @@
+[Unit]
+Description=Forte Vision authenticated jury API
+After=network.target forte-vision-analysis.service
+Wants=forte-vision-analysis.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/forte-vision
+EnvironmentFile=/etc/forte-vision/runtime.env
+Environment=NUHACK_JURY_ENGINE=gemma
+ExecStart=/opt/forte-vision/.venv/bin/python -m forte_vision.interfaces.jury_http --port 8765
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

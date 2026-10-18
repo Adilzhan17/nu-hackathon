@@ -1,0 +1,18 @@
+[Unit]
+Description=Forte Vision scenario analysis coordinator
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/forte-vision
+EnvironmentFile=/etc/forte-vision/runtime.env
+ExecStart=/opt/forte-vision/.venv/bin/python -m forte_vision.interfaces.analysis_http --port 8771
+Restart=on-failure
+RestartSec=3
+UMask=0077
+NoNewPrivileges=true
+MemoryMax=2G
+CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target

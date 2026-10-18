@@ -1,0 +1,4 @@
+# CPU video preparation for the Gemma coordinator and standalone jury API.
+# Training and legacy X3D dependencies are separate (ml/requirements-runtime.txt).
+av==19.0.1
+Pillow==12.3.0

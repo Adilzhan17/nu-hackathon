@@ -1,4 +1,9 @@
-GEMMA 4 — ISOLATED LOCAL VIDEO REVIEW
+GEMMA 4 — COMPATIBILITY AND HISTORICAL OPERATIONS
+
+The canonical runtime now lives in forte_vision/. Start with README.txt and
+docs/ARCHITECTURE.txt at the repository root. Modules here forward to the new
+implementation; adaptation/ retains frozen research inputs. UI ownership moved
+to frontend/analysis/index.html. Existing job and model directories are unchanged.
 
 Public MVP: https://forte.perricheno.com/ (redirects to /demo/gemma)
 Code: ml/gemma_lab/; jobs/results: runs/gemma_lab/uploads/<uuid>/.

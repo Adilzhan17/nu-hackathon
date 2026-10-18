@@ -57,7 +57,8 @@ def publish(page, status):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--status', type=Path, required=True)
-    parser.add_argument('--page', type=Path, default=Path('ml/gemma_lab/index.html'))
+    parser.add_argument('--page', type=Path, required=True,
+                        help='Explicit research page; never implicitly update the product homepage')
     args = parser.parse_args()
     publish(args.page, json.loads(args.status.read_text()))
 
