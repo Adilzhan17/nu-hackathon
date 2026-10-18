@@ -77,3 +77,5 @@ playwright-report/
 *.key
 .DS_Store
 /ml/forte_theme/theme.bundle.js
+# Rebuilt continuously by ml/live_console/publish.py from the tracked template.
+/ml/scenario.html
