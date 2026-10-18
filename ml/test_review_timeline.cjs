@@ -1,0 +1,13 @@
+const assert=require('node:assert/strict');
+const {partition,events,scoreAt,review}=require('./review_timeline.js');
+const ws=[{start_sec:0,end_sec:8,score:.8,model_key:'a',suspect:true},{start_sec:4,end_sec:12,score:.1,model_key:'a',suspect:false}];
+assert.deepEqual(partition(ws,16).filter(p=>p.suspect).map(p=>[p.start_sec,p.end_sec]),[[0,4],[4,8]]);
+assert.equal(partition(ws,16).at(-1).covered,false);
+assert.equal(partition([...ws,{...ws[0],start_sec:2}],16,2).some(p=>p.suspect),false,'two windows from one model are one vote');
+assert.deepEqual(partition([...ws,{start_sec:6,end_sec:10,score:.9,model_key:'b',suspect:true}],16,2).filter(p=>p.suspect).map(p=>[p.start_sec,p.end_sec]),[[6,8]]);
+assert.equal(scoreAt(ws,7),.8);assert.equal(scoreAt(ws,8),.1);assert.equal(scoreAt(ws,12),null);
+assert.deepEqual(events([{start_sec:0,end_sec:8,score:.5},{start_sec:4,end_sec:12,score:.7}],.5),[{start_sec:0,end_sec:12,score:.7,timecode_sec:8}]);
+const job={id:'test',duration_sec:16,models:['a','b'],results:{a:{status:'completed',windows:ws},b:{status:'failed'}}},original=JSON.stringify(job);
+assert.equal(review(job,.5,2).events.length,0);assert.equal(review(job,.9,1).events.length,0);assert.equal(review(job,.5,1).events[0].end_sec,8);assert.equal(JSON.stringify(job),original);
+assert.equal(partition([{start_sec:0,end_sec:8,score:NaN,suspect:true}],10)[0].covered,false);
+console.log('Timeline: overlap, distinct-model votes, threshold boundary, missing data, immutability — OK');

@@ -1,0 +1,9 @@
+# Install torch/torchvision CPU builds from the official CPU wheel index first.
+torch==2.7.1
+torchvision==0.22.1
+pytorchvideo==0.1.5
+av==19.0.1
+numpy==2.2.6
+Pillow==12.3.0
+fvcore==0.1.5.post20221221
+iopath==0.1.10

@@ -1,0 +1,17 @@
+[Unit]
+Description=Forte X production frontend, isolated release
+After=network.target nuhack-frontend.service nuhack-annotator.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/nuhack/runs/forte_x/release_v1/frontend
+Environment=FORTE_PROJECT_ROOT=/root/nuhack
+ExecStart=/opt/agent-studio-runtime/node /root/nuhack/frontend/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3001
+ExecStartPost=/root/nuhack/.venv/bin/python -m ml.forte_x.deploy_frontend ready
+ExecStopPost=/root/nuhack/.venv/bin/python /root/nuhack/ml/forte_x/deploy_frontend.py deactivate
+Environment=PYTHONPATH=/root/nuhack
+Restart=on-failure
+RestartSec=2
+
+[Install]
+WantedBy=multi-user.target

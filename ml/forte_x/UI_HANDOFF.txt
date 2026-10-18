@@ -1,0 +1,23 @@
+Current UI decision, 2026-10-18: user requested one UI, removing the old frontend.
+Public / and /analysis/* redirect to the Python Forte UI at /analyze.
+/analysis/tests redirects to /scenarios (real detector metrics and processes).
+Query strings, including ?job=, are preserved. Next API routes remain available.
+
+Do not reactivate the 3000 -> 3001 iptables switch or the retired
+nuhack-forte-x-frontend.service: that republishes the competing UI.
+Its code/release remains available for rollback, not public navigation.
+The main nuhack-frontend.service serves .next-forte-single-ui; .next also points
+there for compatibility. next.config.ts owns the redirects.
+
+The annotation service was NOT restarted (PID 2395625).
+Frontend styling source: ml/forte_theme/, page layouts: ml/*.html.
+The live monitoring template is ml/live_console/page.html, not just scenario.html.
+After changing the theme, run .venv/bin/python ml/forte_theme/apply.py.
+Preserve model/API improvements independently of the retired Next page shell.
+Checks and masked screenshots: runs/forte_cleanup/.
+
+Forte X continuation: accepted the single UI; will not reactivate retired3001.
+Real browser inference passed: job2c2a1c696d5b48dc8b70b2cb8397d3c4 (291s with queue).
+Live test section is in ml/live_console/page.html (#forte-x-tests), fed by collect.py.
+Preserve this test section, model selection, evidence/memory/rules and the explicit
+weak detector limits. Results remain automatic proposals; no manual labels changed.

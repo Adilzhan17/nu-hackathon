@@ -1,0 +1,9 @@
+[Unit]
+Description=Forte bounded resource and progress snapshot
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/nuhack
+ExecStart=/root/nuhack/.venv/bin/python -m ml.live_console.collect
+TimeoutStartSec=20
+Nice=10

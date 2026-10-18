@@ -1,0 +1,35 @@
+{
+  "status": "proposed_not_agreed",
+  "schema_owner": "ml/export_human_dataset.py",
+  "source": "data/human_review/exports/<snapshot>/manifest.jsonl",
+  "metadata": "data/human_review/exports/<snapshot>/metadata.json",
+  "expected_schema_version": 1,
+  "expected_taxonomy_version": "human_observed_actions_v1",
+  "identity_fields": ["video", "video_sha256", "group_id", "split"],
+  "interval_fields": ["start_sec", "end_sec", "duration_sec", "evidence_time_sec"],
+  "action_field": "observed_action",
+  "audit_fields": ["task_id", "task_version", "decision_revision", "source_fingerprint", "reviewer", "reviewed_at", "provenance", "review_audit"],
+  "required_values": {
+    "split": "train",
+    "label_scope": "observed_action",
+    "label_origin": "explicit_human_review",
+    "action_confirmed": true,
+    "eligible_for_action_training": true,
+    "violation_confirmed": false,
+    "eligible_for_violation_training": false,
+    "normal_action_is_whole_video_label": false
+  },
+  "checks_after_agreement": [
+    "Validate export file hashes and source snapshot freshness read-only; never instantiate a store that writes locks or snapshots",
+    "Validate all source video hashes, frozen train group, real duration and evidence inside interval",
+    "Preserve human actions as a separate higher-authority source",
+    "Exclude weak pairs with conflicting overlapping human actions from auxiliary action loss pending review",
+    "Map taxonomy explicitly; reject unknown codes rather than guess",
+    "No binary or negative action label from reject, needs_context, omissions or normal_action",
+    "No positive legal-violation label from possible_violation",
+    "Apply the same group exclusions in every inner and outer training fold",
+    "Count actually loaded confirmed actions separately from weak pairs"
+  ],
+  "training_import_enabled": false,
+  "reason": "Await schema agreement. Current observed export contains zero confirmed actions. No human review data has been read as training supervision."
+}

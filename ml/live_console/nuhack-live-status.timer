@@ -1,0 +1,11 @@
+[Unit]
+Description=Refresh Forte resource snapshot every 15 seconds
+
+[Timer]
+OnBootSec=15
+OnUnitInactiveSec=15
+AccuracySec=1
+Unit=nuhack-live-status.service
+
+[Install]
+WantedBy=timers.target

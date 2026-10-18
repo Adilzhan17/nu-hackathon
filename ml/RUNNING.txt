@@ -1,0 +1,55 @@
+Forte API — experimental baseline, not a validated violation classifier
+
+Current deployment
+  UI: https://forte.perricheno.com/analysis/new
+  API: https://forte.perricheno.com/api/v1/analyze
+  Status: GET /api/v1/jobs/{job_id}
+  Both API endpoints require X-API-Key. Upload is multipart field file, MOV,
+  maximum 64 MiB and 180 seconds. Total deadline is 300 seconds including upload
+  and queueing. Failed/partial inference never becomes no_violation.
+  The private key is .secrets/jury_api_key (0600). Do not commit or publish it.
+  Jury files stay in data/jury_jobs and never enter training or public assets.
+
+Interpretation
+  One X3D-S with the existing binary head and threshold is used by the API.
+  Positive intervals remain unclassified; the API does not invent visible
+  actions, an ID check failure, or a legal citation from a binary score.
+  no_violation means no candidate crossed the threshold, not full compliance.
+  Other model experiments are accessible at /analyze and /training.
+  VideoMAE NC checkpoints are excluded from the jury API and runtime package.
+  Model selection does not establish generalization. See /readiness.
+
+Offline inference / transfer
+  python3 ml/export_runtime.py creates dist/forte-api-runtime.tar.gz containing
+  source and X3D weights, checksums and the PyTorchVideo Apache-2.0 license.
+  It excludes recordings, labels, predictions, secrets and NC checkpoints.
+  This is an API package, not the complete frontend or Python environment.
+  Prepare Python 3.12 and dependencies before moving to an offline machine:
+    python3 -m venv .venv
+    .venv/bin/pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cpu
+    .venv/bin/pip install -r ml/requirements-runtime.txt
+  For a network-isolated target, transfer a compatible environment or a complete
+  wheelhouse built for that target; the archive does not contain those wheels.
+  Generate a new random key in .secrets/jury_api_key with permissions 0600 and
+  keep the containing directory 0700. Pass it to the authorized API client.
+  From the extracted project root run:
+    HF_HUB_OFFLINE=1 TRANSFORMERS_OFFLINE=1 .venv/bin/python ml/serve_jury.py
+  No annotation dataset is needed. Serving binds 127.0.0.1:8765; expose it through
+  your reverse proxy, as in the current Cloudflare deployment.
+
+Frontend
+  Follow frontend/README.md. Live mode is the default; demonstration scenarios
+  must be explicitly selected. API_BASE_URL, API_KEY and PUBLIC_ORIGIN are server
+  settings. API_KEY must never have a NEXT_PUBLIC_ prefix.
+
+Reproduce the saved evaluation
+  python3 ml/readiness_audit.py
+  python3 ml/readiness_audit.py --evaluate-x3d
+  The second command requires the private original validation videos and runs
+  inference. Eight reused validation videos are not an independent final test.
+
+Source control
+  The current working tree contains uncommitted ML source. The runtime export
+  provides an explicit transferable artifact; an ordinary git push does not
+  include uncommitted files. Review and commit source separately. Never add
+  .secrets, audio.txt, data, runs, or uploaded jury videos to a public repository.

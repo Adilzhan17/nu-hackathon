@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "esbuild": "^0.28.2",
+    "morphicons": "^2.0.0"
+  }
+}

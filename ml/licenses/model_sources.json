@@ -1,0 +1,23 @@
+{
+  "checked_at": "2026-10-17",
+  "jury_model": "x3d",
+  "model_sha256": "44af682282b390056406b230fe5ed3e0d1378f83048f3120362ee61434599dc1",
+  "sources": [
+    {
+      "model": "X3D-S",
+      "repository": "https://github.com/facebookresearch/pytorchvideo",
+      "license": "Apache-2.0",
+      "license_url": "https://github.com/facebookresearch/pytorchvideo/blob/main/LICENSE",
+      "model_zoo": "https://github.com/facebookresearch/pytorchvideo/blob/main/docs/source/model_zoo.md"
+    }
+  ],
+  "excluded_from_jury": [
+    "videomaev2",
+    "videomaev2_large",
+    "videomaev2_giant",
+    "yolov8",
+    "yolo11",
+    "slowfast"
+  ],
+  "note": "Repository license and official checkpoint source recorded. This manifest is not a legal opinion about every third-party dependency or training dataset."
+}
