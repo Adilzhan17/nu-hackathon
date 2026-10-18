@@ -9,10 +9,11 @@ Live pages (served by the existing annotation process, no restart):
 The exact selection {videomaev2,yolo11} activates the contextual experiment in
 the per-upload infer_video subprocess. Other selections retain their classifier
 workflow; their object overlay reads the same detector_active registry.
-The private jury API stays X3D; no production model is automatically replaced.
-The existing frame-assist interface is a separately labelled external VLM, not
-our YOLO detector. This implementation never calls its external APIs. Manual
-boxes remain human records and are not overwritten by any inference.
+This document describes the older detector experiment. The current private jury
+API uses the local Gemma scenario pipeline. External annotation initiation and
+credentials were removed on 2026-10-18, including the obsolete queue/publisher
+scripts. Historical annotation provenance is preserved; manual boxes remain
+human records and are not overwritten by inference.
 
 Data:
   detector_dataset_v3: read-only SQLite snapshot, only complete/certain human

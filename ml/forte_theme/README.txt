@@ -33,7 +33,7 @@ job checked at 1440, 1280, 1024, 768 and 390px; threshold/reset/seek verified.
 
 2026-10-18 UI cleanup:
 Legacy page CSS colors were migrated to light surfaces at source, including
-frame_assist_ui.js and the monitoring publisher template. Shared states use
+the monitoring publisher template. Shared states use
 readable foregrounds. training_archive.html is now included in apply.py.
 Root and old /analysis routes redirect into this UI. Next API routes remain.
 The competing 3001 release and its iptables switch were retired; see

@@ -2,7 +2,7 @@
 
 The mapping is deliberately conservative: a visual scenario is a reason for
 human review, not a final legal conclusion.  The source snapshot and digest are
-kept in ``ml/regulatory_sources.json``.
+kept in ``ml/legal/gemma_sources_verified_20261018.json``.
 """
 
 SOURCE_TITLE = (

@@ -5,11 +5,23 @@ Actual training commands and pinned artifact paths are in RUNBOOK.txt. train.py
 uses dataset.py / PyTorch DataLoader, performs answer-only gradient updates, and
 saves adapter checkpoints plus the ledger of examples actually consumed. It owns
 the common GPU lock and has a hard time budget. Never run a second heavy job.
-The completed experiment used 86 examples: 41 human actions and 45 weak captions,
+The earlier adaptation_v1 experiment used 86 examples: 41 human actions and 45 weak captions,
 from 10 fit source groups. Weak descriptions remain unconfirmed supervision.
 The adapter is NOT automatically activated on the site. A successful gradient
 update is not evidence of improved recognition; see the measured report in
 runs/gemma_lab/adaptation_v1/final_report_v1/REPORT.txt when generated.
+
+The 2026-10-18 follow-up uses only our 35 specific human-confirmed examples from
+the same frozen fit groups. The two candidates have 35 and 70 updates (one and
+two exposures to the SAME examples), not an expanded dataset. Architectural
+research and independent implementation are documented in
+REPOSITORY_REVIEW_20261018.txt. No other team's source, weights, footage or labels
+are training inputs. See HUMAN_ONLY_RESULTS_20261018.txt for measured outcomes.
+
+The site's current local GGUF pipeline uses instructions_v4.txt and bounded,
+priority-based detail selection. Its sampling frequency is adaptive in the jury
+profile. These changes are distinct from the HF/NF4 adapter experiments and have
+not established a production accuracy improvement.
 
 instructions_v3.txt is the corrected detailed general prompt. It adds
 explicit current-image inspection, actor/cash continuity, before/after evidence,

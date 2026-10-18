@@ -77,7 +77,9 @@ The one-exposure pilot did not improve either metric. A second bounded candidate
 uses the SAME35 unique human examples twice (70 shuffled exposures, not70 new
 annotations), learning rate1e-4 and a fresh base initialization. Its manifests
 and training outputs are under runs/gemma_lab/human_only_v3. Both candidates
-remain experimental until the comparison establishes a reason to activate.
+remain experimental. The second candidate gained only one correct action
+(3/16 vs2/16); its binary diagnostic returned normal for all8 videos and missed
+all4 positives. Neither adapter was activated. See HUMAN_ONLY_RESULTS_20261018.txt.
 
 An independent sampling change implements the architectural idea of targeted
 reinspection: prioritize employee departure, keys and safe transitions across

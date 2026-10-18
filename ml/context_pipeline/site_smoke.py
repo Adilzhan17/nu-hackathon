@@ -1,4 +1,4 @@
-"""Exercise the real upload and polling API on localhost; never call frame-assist APIs."""
+"""Exercise the real local upload and polling API without external AI services."""
 import argparse
 import json
 from pathlib import Path

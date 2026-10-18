@@ -1,0 +1,163 @@
+Gemma 4 human-only adaptation audit — 2026-10-18
+================================================
+
+Scope and data
+--------------
+Architectural research: REPOSITORY_REVIEW_20261018.txt (four attributed repos).
+No external team code, prompts, annotations, footage or weights were copied.
+The candidates use our existing frozen protocol, not a new favorable split:
+  runs/gemma_lab/adaptation_v1/frozen_group_protocol.json
+  protocol_sha256 9ac6c75cb6ef691cb33138dc5225c3d6672f031d56e3cedfe39f16c08de0ee88
+
+The 35 unique human-confirmed action examples belong to 10 fit video groups.
+45 unconfirmed model captions and 6 generic/state examples were excluded.
+The 17 action classes are sparse (1–5 unique examples per class). Key/stamp
+handling has no positive training example in this selected set. Repeating the
+35 examples twice does not create 70 independently labeled observations.
+
+Both runs start from the pinned base, not the older degraded adapter:
+  google/gemma-4-12B-it-qat-q4_0-unquantized
+  revision b6ed86275a6a5735884e208bfed95b445a684ca2
+  HF bitsandbytes NF4, language FP16, frozen vision FP32, 70 image soft tokens
+  rank 4 / alpha 8, 14 q/v modules in the last eight language layers
+  428032 trainable parameters; seed 7301; answer-only loss
+  prompt aligned with existing base_v2prompt action evaluation
+This runtime is NOT the deployed llama.cpp QAT Q4_0 GGUF pipeline.
+
+Completed training
+------------------
+Candidate v2: one exposure, 35 updates, learning rate 5e-5, 181.419 seconds.
+  Mean consumed-example loss 2.873881 (not a quality metric).
+  Dataset SHA256 0b3fb8103d8ceef1683332e0c2678eccc53b7278b15a4d2a77b26de03ac4c0cb
+  Adapter SHA256 1a26629950e38106ee1bd0f84428c70caeaeae842e2f51e5ede301bda687c159
+  runs/gemma_lab/human_only_v2/train/checkpoints/update_000035
+Candidate v3: two exposures, 70 updates, learning rate 1e-4, 357.825 seconds.
+  Mean consumed-example loss 1.637190 (not directly comparable across exposures).
+  Dataset SHA256 1db84fa33ea31d9b9b5aa2c54d24a6abf82002e31536e9ca46248085df53fd8c
+  Adapter SHA256 3c381c4d23cf6d9c134b1ff4981ca2e9832bb2538995fec973564484d7b94fde
+  runs/gemma_lab/human_only_v3/train/checkpoints/update_000070
+Both completed every scheduled update with finite values; forensic inspection
+found nonzero effective changes in all 14 adapter modules, no tensor problems.
+This verifies actual training happened, not that recognition became better.
+
+Evaluation
+----------
+Each candidate is paired with adapter-disabled inference using identical base
+weights, frames, prompts, greedy decoding and 128-token output limits.
+Action task: 19 human intervals, 16 scorable, 3 excluded generic/state labels.
+Two frames per supplied interval; this is conditional top-1 classification,
+NOT event detection, temporal localization or whole-video violation accuracy.
+
+Candidate v2:
+  Base: 2/16 correct (12.5%), 16/16 answered.
+  Adapter: 2/16 correct (12.5%), 16/16 answered.
+  No improvement.
+Candidate v3:
+  Base: 2/16 correct (12.5%), 16/16 answered.
+  Adapter: 3/16 correct (18.75%), 16/16 answered.
+  One additional cash_counter_loading interval correct (+6.25 percentage points).
+  This single extra answer on reused development data does not establish a
+  reliable improvement or production readiness. All 38 paired runs completed
+  for each candidate (v2:381.552 seconds; v3:311.104 seconds).
+
+Additional binary diagnostic: 16 fixed frames jointly, next-token 0/1 logits,
+8 inner-holdout videos. It is not the sequential/site scenario evaluation.
+Candidate v2, both base and adapter:
+  3/8 correct (37.5%), all 8 answered; TN=3, FP=1, FN=4, TP=0.
+  Positive recall 0/4. Accuracy Wilson 95% interval approximately 13.7–69.4%.
+Candidate v3:
+  Base: 3/8 correct (37.5%), all 8 answered; TN=3, FP=1, FN=4, TP=0.
+  Adapter: 4/8 correct (50%), all 8 answered; TN=4, FP=0, FN=4, TP=0.
+  The adapter predicts normal for ALL eight videos; positive recall is still
+  0/4. Removing the one false alarm is not improved violation detection.
+  Both diagnostics completed all eight pairs (v2:71.407 seconds; v3:73.628 seconds).
+
+Activation decision: keep both adapters experimental, do NOT deploy them.
+The current production model remains the original GGUF weights. A declining
+training loss, one extra action answer and an all-negative binary classifier
+do not meet a reasonable gate for replacing the working scenario pipeline.
+
+These development holdouts were used previously. They are NOT an independent
+final test. No jury upload or original diagnostic-val group is a training input.
+No complete production-video accuracy measurement was performed in this study.
+Neither candidate is automatically activated by the training/evaluation scripts.
+
+Reproduction and audit locations
+-------------------------------
+Preparation:
+  python -m ml.gemma_lab.adaptation.prepare_human_only \
+    --run-root runs/gemma_lab/adaptation_v1 --output NEW/prepared \
+    --repeats 1 --learning-rate 0.00005
+For v3 use --repeats 2 --learning-rate 0.0001. Never overwrite the actual inputs.
+Training uses adaptation.train --dataset <prepared/training_samples.jsonl>
+--run-root runs/gemma_lab/adaptation_v1 --model artifacts/gemma_adaptation/base
+--output NEW/train --max-updates 35 (v3:70) --max-seconds 900
+--learning-rate 0.00005 (v3:0.0001) --save-optimizer.
+
+run_eval uses prepared/eval_action_samples.jsonl, the frozen protocol, the
+candidate's final checkpoint, --partition inner_holdout --task action
+--seconds 900 --conditions base_v2prompt lora_v2prompt.
+forced_choice_eval uses prepared/eval_video_samples.jsonl, the same checkpoint,
+--partition inner_holdout --seconds 300. Both own the common GPU lock.
+Evaluation output directories must be under the original run root:
+  runs/gemma_lab/adaptation_v1/human_only_v2_eval_actions
+  runs/gemma_lab/adaptation_v1/human_only_v2_eval_forced_choice
+  runs/gemma_lab/adaptation_v1/human_only_v3_eval_actions
+  runs/gemma_lab/adaptation_v1/human_only_v3_eval_forced_choice
+Each contains configuration, exact predictions and metrics. Training manifests,
+consumption ledgers, checkpoints and adapter_forensics.json are stored under
+runs/gemma_lab/human_only_v2 and human_only_v3. These private artifacts are not
+published to GitHub. Optimizer state stays on the training host.
+
+Metadata correction: the first frozen v2/v3 prepared files inherited a stale
+auxiliary prompt_sha256 field from the source rows. The actual prompt text was
+correctly aligned and consumed. All 35/70 trainer consumption hashes match the
+SHA256 of the actual corresponding prompt bytes. The generator now recomputes
+the auxiliary hash; historical input files and their dataset hashes were NOT
+rewritten. Re-generating with today's fixed code changes auxiliary metadata.
+
+Production changes are separate from training
+--------------------------------------------
+- Prioritize departure/key/safe observations for the two detail windows; record
+  selected observations and timestamps. Coverage heuristic, no accuracy claim.
+- Use actual adaptive timestamps in instructions rather than implying 0.5 s
+  overview sampling for every jury job.
+- Legal references verified independently against official Adilet API text:
+  ml/legal/gemma_sources_verified_20261018.json. Object-dependent p80 keys/stamps
+  versus p20 cash, explicit internal-rule/context limitations, no invented rule
+  that any short workstation absence violates the 30-minute auto-lock provision.
+- Show 1–3 evidence frames including first/middle/last alongside supported rules.
+- Remove external annotation integration, credential file, buttons, routes,
+  obsolete queue/publisher scripts. Preserve original human annotation records
+  and historical provenance. Provider-account key revocation was not performed.
+- Keep jury jobs out of public job history/media routes; authenticated API works.
+
+Verification
+------------
+65 focused protocol/API/manual-frame/sampling/instruction tests passed with
+PYTHONPATH=ml; the separate adaptation test suite passed 66 tests (some overlap).
+The browser regression test passed the legal/evidence cards, incomplete-result
+handling and upload guard. Public mobile page: one file input, no horizontal
+overflow, no JavaScript errors or external AI requests. Anonymous jury GET is
+401; authenticated GET is 200; removed cloud annotation routes are 404.
+
+After the GPU evaluations, a real authenticated production API upload of our
+existing 15.5667-second TRAIN footage completed in 93.361 seconds, under the
+300-second limit: job 0acfdd9662e3468cbf5c528a5ce996d8, status done,
+verdict no_violation. All eight scheduled overview frames were processed;
+the new selector used its documented midpoint fallback because no candidate
+transition was observed. instructions_v4.txt and the original GGUF weights were
+confirmed in the result. This checks the deployment path, NOT recognition
+accuracy, departure-priority effectiveness or performance on an unseen video.
+
+What is needed next
+-------------------
+Collect and manually verify before/during/after sequences for keys, stamps,
+safe access and employee departure, including matched normal cases. Cover small
+objects, occlusion and the alternative camera angle. Label visible objects,
+actions and time boundaries separately from the legal finding. Sparse binary
+video labels do not establish those event labels. Internal rules can refine
+additional obligations when available; do not invent them in the meantime.
+Freeze a new untouched test set before further tuning. Evaluate the actual
+deployed GGUF end-to-end with both missed violations and false alarms before
+claiming production readiness or an accuracy gain.
