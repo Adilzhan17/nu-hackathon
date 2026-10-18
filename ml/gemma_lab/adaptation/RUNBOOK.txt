@@ -1,0 +1,142 @@
+Gemma 4 / Forte: локальная адаптация и парная проверка
+
+Все команды обучения выполняются на существующем T4, в
+/home/ubuntu/nuhack-training, отдельным .venv-gemma-adapt/bin/python.
+На основном сервере CPU-команды используют /root/nuhack/.venv/bin/python.
+Ни кадры, ни описания не передаются внешним AI API. Загрузка публичных
+весов допускается; дальнейшие модельные операции работают offline.
+
+Зафиксированные входы эксперимента:
+  runs/gemma_lab/adaptation_v1/frozen_group_protocol.json
+  runs/gemma_lab/adaptation_v1/prepared/training_samples_v2.jsonl
+  runs/gemma_lab/adaptation_v1/prepared/eval_action_samples.jsonl
+  runs/gemma_lab/adaptation_v1/prepared/eval_video_samples.jsonl
+
+Исходный manifest и ручная разметка не меняются. 24 исходные train-группы
+отведены для fit, 8 других train-групп — для внутренней проверки. Прежние
+8 val остаются повторно использованной диагностикой, не независимым test.
+В 10 fit-группах есть пригодные примеры: 41 human action и 45 weak caption.
+12 дополнительных weak caption исключены с причиной. Источник, доверие,
+SHA и время каждого реально использованного примера записываются в ledger.
+
+База:
+  google/gemma-4-12B-it-qat-q4_0-unquantized
+  revision b6ed86275a6a5735884e208bfed95b445a684ca2
+  Apache-2.0; подробности и первичные источники в feasibility.txt.
+  artifacts/gemma_adaptation/verified_weights.json содержит фактический SHA.
+  bootstrap_remote.sh устанавливает только .venv-gemma-adapt.
+
+Обучение: NF4 + FP16 языковая часть; небольшой визуальный блок в FP32,
+поскольку реальный пилот выявил переполнение patch_dense до нормализации.
+Замороженная база, LoRA rank4 в 14 q/v модулях последних восьми слоёв.
+На примере два кадра с фактическими PTS. Loss только по ответу ассистента;
+human weight1, weak weight0.2. Weak target не объявляется человеческим GT.
+Разметка организатора на целое видео не копируется на отдельные окна.
+
+Короткий пилот в НОВОЙ папке:
+  timeout -k 10 340 .venv-gemma-adapt/bin/python -m ml.gemma_lab.adaptation.train \
+    --dataset runs/gemma_lab/adaptation_v1/prepared/training_samples_v2.jsonl \
+    --model artifacts/gemma_adaptation/base \
+    --output runs/gemma_lab/adaptation_v1/new_pilot \
+    --max-updates 2 --max-seconds 300 --save-optimizer
+
+Продолжение этого пилота до одного прохода по набору:
+  timeout -k 10 950 .venv-gemma-adapt/bin/python -m ml.gemma_lab.adaptation.train \
+    --dataset runs/gemma_lab/adaptation_v1/prepared/training_samples_v2.jsonl \
+    --model artifacts/gemma_adaptation/base \
+    --output runs/gemma_lab/adaptation_v1/new_train \
+    --resume runs/gemma_lab/adaptation_v1/new_pilot/checkpoints/update_000002 \
+    --max-updates 86 --max-seconds 900 --save-optimizer
+
+Внешний flock добавлять не нужно: entrypoints сами захватывают общий
+.gpu-work.lock, проверяют чужие GPU-процессы и освобождают GPU при выходе.
+Занятый GPU не означает разрешение останавливать другие процессы.
+Прерваться — значит сохранить уже законченные обновления, не выдавать
+оставшиеся примеры за использованные. Не продолжать незавершённый gradient.
+
+Фактически обученный checkpoint этого эксперимента:
+  runs/gemma_lab/adaptation_v1/train_v1/checkpoints/update_000086
+  86 успешных обновлений, все 86 уникальных примеров, 0 пропусков.
+  Главный файл весов adapter_model.safetensors (около1.7MB).
+  adapter_forensics.json проверяет конечность и ненулевые изменения весов.
+  Исходный неуспешный FP16 pilot с 0 обновлениями сохранён отдельно.
+
+Парная проверка действий:
+  timeout -k 10 950 .venv-gemma-adapt/bin/python -m ml.gemma_lab.adaptation.run_eval \
+    --samples runs/gemma_lab/adaptation_v1/prepared/eval_action_samples.jsonl \
+    --run-root runs/gemma_lab/adaptation_v1 \
+    --protocol runs/gemma_lab/adaptation_v1/frozen_group_protocol.json \
+    --model artifacts/gemma_adaptation/base \
+    --adapter runs/gemma_lab/adaptation_v1/train_v1/checkpoints/update_000086 \
+    --output runs/gemma_lab/adaptation_v1/new_action_eval \
+    --partition inner_holdout --task action --seconds 900 \
+    --conditions base_v2prompt lora_v2prompt
+
+Для целых видео: заменить samples на eval_video_samples.jsonl, task на video,
+output на новую папку; лимит --seconds 1800, внешний timeout1850.
+Это 16 кадров /4 последовательных окна с историей. Это уменьшенный
+сравнительный протокол, а не проверка production-режима каждые0.5секунды.
+История для обоих v2 условий получена из baseline, чтобы запросы совпадали.
+Кадры, инструкции, лимиты, база и декодирование одинаковы; меняется адаптер.
+Ответы организаторов и человеческие описания проверочных видео в prompt
+не попадают. Порогов, выбранных по val, нет.
+
+Бинарный класс видео — предварительная классификация. Он отдельно от
+визуальных доказательств нарушения. Null не считается нормальным видео.
+Метрики действий — top1 по предоставленным человеческим интервалам;
+они не являются точностью временного обнаружения или типов нарушения.
+При неполной проверке отчёт отдельно показывает только парные результаты.
+
+Подробная инструкция для полного просмотра: instructions_v3.txt.
+V2 сохранена для истории; в v3 исправлен несовместимый events.recipient.
+instruction_compatibility.json фиксирует проверку точной схемы сервера.
+Компактная инструкция сравнительного теста: eval_prompts.py.
+Рабочий сайт использует прежний GGUF QAT Q4_0; HF NF4-адаптер не включается
+автоматически. Результаты и ограничения отображаются карточкой обучения
+через publish_status.py без остановки сайта. Успешный gradient не является
+доказательством улучшения; итог сравнения записан в final_report_v1/REPORT.txt.
+
+Фактическое сравнение update_000086:
+  - действия, 16 конкретных человеческих интервалов: база 2/16 (12.5%),
+    LoRA 1/16 (6.25%); ещё 3 неспецифичных/состояния исключены из top-1;
+  - четыре последовательных окна на видео: база и LoRA верно 3/8;
+    пригодных бинарных ответов соответственно 7/8 и 5/8;
+  - 15/64 ответов отдельных окон не прошли JSON/schema;
+  - дополнительный direct0/1 по тем же16кадрам одновременно: обе 3/8,
+    все8ответов получены; обе пропустили все4положительных видео.
+Это отсутствие улучшения, а не основание заменить production-веса.
+
+Дополнительный протокол, в НОВОЙ папке, после освобождения GPU:
+  timeout -k 10 330 .venv-gemma-adapt/bin/python -m ml.gemma_lab.adaptation.forced_choice_eval \
+    --samples runs/gemma_lab/adaptation_v1/prepared/eval_video_samples.jsonl \
+    --run-root runs/gemma_lab/adaptation_v1 \
+    --model artifacts/gemma_adaptation/base \
+    --adapter runs/gemma_lab/adaptation_v1/train_v1/checkpoints/update_000086 \
+    --output runs/gemma_lab/adaptation_v1/new_forced_choice_eval --seconds 300
+
+Отчёт проверяет checkpoint, фактический ledger, соответствие групп и
+совпадение входов в каждой паре; готовые отчёты не перезаписываются:
+  .venv/bin/python -m ml.gemma_lab.adaptation.report \
+    --run runs/gemma_lab/adaptation_v1 \
+    --training runs/gemma_lab/adaptation_v1/train_v1 \
+    --video-eval runs/gemma_lab/adaptation_v1/eval_inner_video_v1 \
+    --action-eval runs/gemma_lab/adaptation_v1/eval_inner_actions_v1 \
+    --forced-choice-eval runs/gemma_lab/adaptation_v1/eval_forced_choice_v1 \
+    --output runs/gemma_lab/adaptation_v1/new_report
+
+Фактический полный GGUF-пилот подробных инструкций:
+  v3: 32/32кадра, 0наблюдений, 49.72с; не включена;
+  v4: 32/32кадра, 13наблюдений, 149.70с; телефон по-прежнему пропущен.
+  gguf_instructions_v4_comparison/REPORT.txt — сравнение с исходным пилотом.
+Это ранее просмотренное fit-видео, не измерение accuracy.
+
+Повтор нового пилота: сначала создать НОВУЮ job-папку с plan.json и frames/
+из разрешённого train-видео; существующие результаты не перезаписывать.
+  timeout -k 10 650 .venv-gemma-lab/bin/python -m ml.gemma_lab.runner \
+    --job runs/gemma_lab/adaptation_v1/new_instruction_pilot --seconds 600 \
+    --instructions ml/gemma_lab/adaptation/instructions_v4.txt
+
+Явный --instructions включает экспериментальную оболочку запроса.
+Обычные загрузки без него используют прежние инструкцию и оболочку.
+Веб-публикация gguf_instructions_v4_publication.json хранит отдельный job ID;
+старый пилот не заменён. Итог всех этапов: adaptation_v1/RESULTS.txt.

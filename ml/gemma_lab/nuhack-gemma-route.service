@@ -1,0 +1,14 @@
+[Unit]
+Description=Reversible loopback routing for Gemma tab
+Requires=nuhack-gemma-web.service
+After=nuhack-gemma-web.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/root/nuhack
+ExecStart=/root/nuhack/.venv/bin/python -m ml.gemma_lab.routing enable
+ExecStop=/root/nuhack/.venv/bin/python -m ml.gemma_lab.routing disable
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

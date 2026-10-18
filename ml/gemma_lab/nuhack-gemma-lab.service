@@ -1,0 +1,18 @@
+[Unit]
+Description=Isolated Gemma annotation and video review UI
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/nuhack
+ExecStart=/root/nuhack/.venv/bin/python -m ml.gemma_lab.server --port 8771
+Restart=on-failure
+RestartSec=3
+Nice=10
+CPUQuota=200%
+MemoryMax=2G
+UMask=0077
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

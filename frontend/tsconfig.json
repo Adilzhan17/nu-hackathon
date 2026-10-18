@@ -35,7 +35,9 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     ".next-forte-single-ui/types/**/*.ts",
-    ".next-forte-single-ui/dev/types/**/*.ts"
+    ".next-forte-single-ui/dev/types/**/*.ts",
+    ".next-gemma-lab/types/**/*.ts",
+    ".next-gemma-lab/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

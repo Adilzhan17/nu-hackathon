@@ -1,11 +1,12 @@
 import type { NextConfig } from "next";
 const config: NextConfig = {
   poweredByHeader: false,
-  distDir: ".next-forte-single-ui",
+  distDir: process.env.FORTE_NEXT_DIST || ".next-forte-single-ui",
   async redirects() {
     // One public UI. Keep Next API compatibility for existing consumers.
     return [
-      { source: "/", destination: "/analyze", permanent: false },
+      { source: "/", destination: "/demo/gemma", permanent: false },
+      { source: "/analysis/new", destination: "/demo/gemma", permanent: false },
       { source: "/analysis/tests", destination: "/scenarios", permanent: false },
       { source: "/analysis", destination: "/analyze", permanent: false },
       { source: "/analysis/:path*", destination: "/analyze", permanent: false },

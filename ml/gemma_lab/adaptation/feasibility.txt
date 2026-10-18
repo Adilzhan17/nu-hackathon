@@ -1,0 +1,88 @@
+Gemma 4 adaptation feasibility, checked 2026-10-18
+
+The training source corresponding to the deployed official QAT GGUF is:
+  google/gemma-4-12B-it-qat-q4_0-unquantized
+  revision b6ed86275a6a5735884e208bfed95b445a684ca2
+  model.safetensors: 23,919,549,408 bytes
+  SHA256 26f2cee4292298a3f9f92209643c37c80e34e011381e22434088870d9439a0a0
+Hugging Face metadata says public, ungated, Apache-2.0. Preserve license and
+model provenance with any redistributed checkpoint. No access token is needed.
+https://huggingface.co/api/models/google/gemma-4-12B-it-qat-q4_0-unquantized?blobs=true
+https://huggingface.co/google/gemma-4-12B-it-qat-q4_0-gguf
+
+The published Google vision QLoRA recipe uses transformers>=5.10.1 and
+peft>=0.19.0, but explicitly requires BF16 hardware and more than 16GB VRAM.
+It therefore does NOT establish that the T4 pilot will work. T4 FP16 must be
+tested with finite loss, finite gradients, actual updates and peak VRAM recorded.
+https://ai.google.dev/gemma/docs/core/huggingface_vision_finetune_qlora
+
+Concrete isolated pilot dependencies:
+  torch==2.8.0 / torchvision==0.23.0, CUDA 12.8 PyTorch wheels
+  transformers==5.10.1
+  peft==0.19.0
+  bitsandbytes==0.48.2
+  accelerate==1.10.1
+All listed version metadata was verified from PyPI; no packages were installed
+by this feasibility task. These pins avoid replacing other models' environments.
+T4 is SM75; bitsandbytes documents NF4/FP4 support on Pascal and newer. FP16,
+not BF16, is used. FlashAttention-2 is not required; use SDPA, allowing its
+compatible fallback for the larger attention head dimensions.
+https://huggingface.co/docs/bitsandbytes/main/en/installation
+https://pytorch.org/get-started/previous-versions/
+
+Architecture inspected directly in pinned transformers v5.10.1 source:
+Gemma4UnifiedForConditionalGeneration; 48 language layers; hidden size3840;
+vocabulary262144. Vision is an encoder-free patch embedder, not SigLIP.
+q_proj exists in every language layer. Full-attention layers5,11,...47 have
+v_proj=None and reuse key values. The last eight layers have14 q/v modules.
+Image processor accepts max_soft_tokens70/140/280/560/1120; use70 per image for
+the feasibility pilot. Merely resizing to256 pixels does not impose a token cap.
+https://github.com/huggingface/transformers/blob/v5.10.1/src/transformers/models/gemma4_unified/modeling_gemma4_unified.py
+https://github.com/huggingface/transformers/blob/v5.10.1/src/transformers/models/gemma4_unified/image_processing_gemma4_unified.py
+
+Training implementation in hf_backend.py:
+- Load local files only; caller validates downloaded weights and holds GPU lock.
+- NF4 double quantization, FP16 compute, one example with2–4 ordered frames.
+- Keep model.embed_vision, model.embed_audio and lm_head out of quantization.
+  Vision code casts pixels to patch_dense.weight.dtype: uint8 quantization there
+  could corrupt the input before LayerNorm. Assert the initial projection was
+  not quantized, then run the small frozen visual embedder in FP32 with AMP
+  disabled. Token embeddings remain FP16.
+- Freeze base weights, including the tied embeddings. LoRA r4/alpha8 only on
+  the14 q/v projections in the final eight language layers.
+- Nonreentrant gradient checkpointing. Do not call the generic preprocessing
+  helper that promotes all frozen nonquantized weights to FP32. Do not train
+  or save the enormous lm_head/embed_tokens modules.
+- Answer-only cross entropy uses logits_to_keep=answer_length+1. It excludes
+  prompt and image positions, and avoids a full vocabulary projection for them.
+- FP16 AMP with GradScaler; skipped nonfinite updates do not count as training.
+- Save real adapter_model.safetensors plus exact base, dependency versions,
+  target modules and successful update counts. Refuse to save an untrained run.
+
+Memory estimates are not measurements: the tied token embedding alone is
+1.875GiB in FP16. The quantized base and nonquantized visual components require
+several more GiB, plus activations, logits, allocator overhead and load peaks.
+A short 300-second pilot under the shared lock is justified; a full multimodal
+fine-tune or a promised accuracy gain is not supported by the current evidence.
+
+Fair comparison: adapter disabled versus enabled on the identical HF NF4 base,
+frames, prompt and greedy decoding. NF4 is different from the live llama.cpp
+QAT Q4_0 quantization, even though their upstream weights correspond. Do not
+attribute cross-runtime differences to adaptation. The live GGUF is unchanged.
+
+CPU validation: four tests cover final-layer selection, assistant-only targets,
+token-limit rejection without truncation, and next-token logit alignment. They
+do not substitute for the actual GPU training/adapter reload pilot.
+
+Update from the real T4 pilot: the first attempt produced nonfinite loss and
+zero updates. A bounded diagnostic found the first nonfinite output in
+model.embed_vision.patch_dense: 277 nonfinite outputs despite finite input and
+parameters. Input range was approximately -192 to157, weight range -130 to147;
+the FP16 output reached65504 before the following normalization. All stored
+floating-point parameters passed finite checks. The observed initial allocation
+was about7.75GB. This is measured failure evidence, not a successful fine-tune.
+The backend now promotes only the small visual embedder to FP32 and disables
+autocast inside it, preserving FP32 until its normalization and projection.
+A CPU regression test reproduces pre-normalization FP16 overflow and verifies
+finite normalized output with this change. The fixed real GPU pilot must still
+establish finite loss, actual gradient updates and adapter reload compatibility.

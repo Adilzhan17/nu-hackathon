@@ -1,0 +1,19 @@
+[Unit]
+Description=Single Forte UI with isolated Gemma routes (blue-green release)
+After=network.target nuhack-gemma-lab.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/nuhack/frontend
+Environment=NODE_ENV=production
+Environment=FORTE_NEXT_DIST=.next-gemma-lab
+Environment=PUBLIC_ORIGIN=https://forte.perricheno.com
+ExecStart=/opt/agent-studio-runtime/node /root/nuhack/frontend/node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3002
+Restart=on-failure
+RestartSec=3
+Nice=10
+MemoryMax=2G
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

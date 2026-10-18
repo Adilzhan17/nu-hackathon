@@ -18,7 +18,8 @@ from unittest.mock import patch
 from PIL import Image
 from infer_video import evidence,file_sha256
 from jury_api import (APIError,JuryAPI,MAX_UPLOAD,READ_CHUNK,RequestReader,
-                      completed_result,configured_key,multipart_file,multipart_header)
+                      completed_result,configured_key,gemma_completed_result,
+                      multipart_file,multipart_header)
 from train_x3d import atomic_json
 from video_jobs import VideoJobs
 
@@ -143,6 +144,22 @@ class JuryAPITests(unittest.TestCase):
         frame=event['evidence_frames'][0]
         self.assertEqual(frame['timestamp_sec'],2.04);self.assertEqual(event['timecode_sec'],2.04)
         self.assertEqual(base64.b64decode(frame['image_base64']),(folder/'x3d-0.jpg').read_bytes())
+
+    def test_gemma_supported_rule_has_legal_source_and_real_frames(self):
+        folder=self.root/'runs/gemma_lab/uploads'/('b'*32);(folder/'frames').mkdir(parents=True)
+        frame=folder/'frames/f00001.jpg';Image.new('RGB',(16,12),'red').save(frame,format='JPEG')
+        ref=dict(id='f00001',timestamp=4.0,sha256=file_sha256(frame))
+        source=dict(title='НБРК № 231',section='пункт 80',url='https://adilet.zan.kz/rus/docs/V1900019680',
+                    review_title='Хранение ключей',legal_note='Требует проверки внутреннего порядка.')
+        state=dict(id='b'*32,status='completed',duration_sec=8,preview_ready=False,sampling_step_sec=2,
+            result=dict(status='completed',coverage=dict(all_sampled_frames_inspected=True),rules=[dict(
+                rule_id='valuables_on_departure',verdict='violation_supported',explanation='Ключи остались после ухода.',
+                regulatory_source=source,evidence=[dict(frames=[ref])])]))
+        response=gemma_completed_result(state,folder)
+        self.assertEqual(response['verdict'],'violation')
+        self.assertEqual(response['violations'][0]['type'],'Хранение ключей')
+        self.assertEqual(response['violations'][0]['regulatory_source']['section'],'пункт 80')
+        self.assertEqual(base64.b64decode(response['violations'][0]['evidence_frames'][0]['image_base64']),frame.read_bytes())
 
     def test_no_candidates_requires_complete_coverage(self):
         state,folder=self.completed(positive=False)

@@ -2,6 +2,7 @@
 import base64
 import hashlib
 import hmac
+import http.client
 import json
 import math
 import os
@@ -11,17 +12,19 @@ import stat
 import time
 from email.parser import BytesHeaderParser
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import quote,urlparse
 
 from infer_video import file_sha256
 from train_x3d import atomic_json
 from video_jobs import VideoJobs
+from gemma_lab.regulatory import regulatory_source
 
 MAX_UPLOAD=64*1024*1024
 MAX_HEADERS=16*1024
 READ_CHUNK=64*1024
 MODEL_KEY='x3d'
 WARNING='Экспериментальная бинарная модель: тип действия и нормативное основание не установлены. Результат требует просмотра человеком; качество не подтверждено на независимом тесте.'
+GEMMA_WARNING='Gemma 4 формирует визуальные признаки для проверки человеком; результат не является окончательным юридическим заключением.'
 
 
 class APIError(Exception):
@@ -188,11 +191,82 @@ def completed_result(state,folder):
     return response
 
 
+def start_gemma(source,name):
+    """Stream a private jury upload to the loopback Gemma worker."""
+    size=Path(source).stat().st_size
+    connection=http.client.HTTPConnection('127.0.0.1',8771,timeout=90)
+    try:
+        with Path(source).open('rb') as stream:
+            connection.request('POST','/jobs?name='+quote(name),body=stream,headers={
+                'Content-Length':str(size),'Content-Type':'application/octet-stream',
+                'X-Gemma-Local-Proxy':'1','X-Gemma-Profile':'jury'})
+            response=connection.getresponse();raw=response.read()
+        try:value=json.loads(raw)
+        except json.JSONDecodeError:raise APIError(503,'gemma_unavailable','Gemma вернула некорректный ответ')
+        if response.status!=202:
+            raise APIError(503,'capacity_unavailable',str(value.get('error','Gemma временно недоступна')))
+        jid=value.get('id')
+        if not isinstance(jid,str) or not re.fullmatch('[a-f0-9]{32}',jid):
+            raise APIError(503,'gemma_unavailable','Gemma не вернула идентификатор задачи')
+        return jid
+    except (OSError,TimeoutError) as exc:
+        raise APIError(503,'gemma_unavailable','Gemma временно недоступна') from exc
+    finally:connection.close()
+
+
+def gemma_completed_result(state,folder):
+    """Convert a complete evidence-gated Gemma pass to the jury contract."""
+    result=state.get('result')
+    if not isinstance(result,dict):raise ValueError('Gemma не вернула результат')
+    coverage=result.get('coverage')
+    if state.get('status')!='completed' or result.get('status')!='completed' or not isinstance(coverage,dict):
+        raise ValueError('Gemma не завершила полный проход')
+    if coverage.get('all_sampled_frames_inspected') is not True:
+        raise ValueError('Gemma обработала не всё запланированное видео')
+    violations=[];seen_rules=set()
+    for rule in result.get('rules',[]):
+        if not isinstance(rule,dict) or rule.get('verdict')!='violation_supported':continue
+        rule_id=rule.get('rule_id')
+        if not isinstance(rule_id,str) or rule_id in seen_rules:continue
+        seen_rules.add(rule_id);source=rule.get('regulatory_source') or regulatory_source(rule_id)
+        refs=[]
+        for evidence in rule.get('evidence',[]):
+            for frame in evidence.get('frames',[]) if isinstance(evidence,dict) else []:
+                if isinstance(frame,dict) and frame.get('id') not in {r.get('id') for r in refs}:refs.append(frame)
+        encoded=[]
+        for frame in refs[:3]:
+            frame_id=frame.get('id');stamp=frame.get('timestamp');digest=frame.get('sha256')
+            if not re.fullmatch(r'[fd]\d{5}',str(frame_id)) or not finite(stamp):continue
+            path=Path(folder)/'frames'/(frame_id+'.jpg')
+            if path.is_symlink() or not path.is_file() or path.stat().st_size>2*1024*1024:continue
+            raw=path.read_bytes()
+            if not raw.startswith(b'\xff\xd8') or not raw.endswith(b'\xff\xd9') or hashlib.sha256(raw).hexdigest()!=digest:continue
+            encoded.append(dict(timestamp_sec=float(stamp),image_base64=base64.b64encode(raw).decode('ascii')))
+        if not encoded:raise ValueError('Для признака Gemma нет проверенного кадра-доказательства')
+        title=(source or {}).get('review_title') or 'Признак возможного нарушения кассовой дисциплины'
+        description=str(rule.get('explanation') or title)
+        if source and source.get('legal_note'):description+=' '+source['legal_note']
+        public_source={k:source[k] for k in ('title','section','url') if source.get(k)} if source else None
+        violations.append(dict(type=title,timecode_sec=encoded[0]['timestamp_sec'],description=description,
+            certainty='suspected',classification_status='classified',regulatory_source=public_source,
+            evidence_frames=encoded))
+    response=dict(job_id=state['id'],status='done',verdict='violation' if violations else 'no_violation',
+        violations=violations,warnings=[GEMMA_WARNING],duration_sec=state.get('duration_sec'),
+        provenance=dict(model_key='gemma4_scenario',local_inference=True,
+                        sampling_step_sec=state.get('sampling_step_sec',2.0),
+                        classification_supported=True,legal_mapping_supported=True))
+    if violations:response['certainty']='suspected'
+    if state.get('preview_ready') and (Path(folder)/'preview.mp4').is_file():
+        response['preview_url']=f'/api/v1/jobs/{state["id"]}/preview'
+    return response
+
+
 class JuryAPI:
     def __init__(self,root,jobs=None,key=None):
         self.root=Path(root)
         self.jobs=jobs if jobs is not None else VideoJobs(self.root,directory=self.root/'data/jury_jobs',private=True)
         self.key=key.encode('utf-8') if isinstance(key,str) else key if key is not None else configured_key(self.root)
+        self.engine=os.environ.get('NUHACK_JURY_ENGINE','x3d')
 
     def authorize(self,handler):
         supplied=handler.headers.get_all('X-API-Key',[])
@@ -231,8 +305,13 @@ class JuryAPI:
             with self.jobs.lock:
                 state=self.jobs.get(jid);state.update(size=size,uploaded_bytes=size,source_sha256=digest,updated_at=time.time(),purpose='jury')
                 atomic_json(folder/'job.json',state)
-            self.jobs.submit(jid)
-            handler.json_response(dict(job_id=jid,status='processing'),202)
+            if self.engine=='gemma':
+                gemma_id=start_gemma(folder/'source.part',name)
+                self.jobs.delete(jid);jid=None
+                handler.json_response(dict(job_id=gemma_id,status='processing'),202)
+            else:
+                self.jobs.submit(jid)
+                handler.json_response(dict(job_id=jid,status='processing'),202)
         except (APIError,TimeoutError,socket.timeout) as exc:
             if jid is not None:
                 try:self.jobs.delete(jid)
@@ -247,6 +326,17 @@ class JuryAPI:
         return True
 
     def job_result(self,jid):
+        gemma_folder=self.root/'runs/gemma_lab/uploads'/jid
+        if (gemma_folder/'job.json').is_file():
+            state=json.loads((gemma_folder/'job.json').read_text())
+            if state.get('status') in ('uploading','processing'):
+                return dict(job_id=jid,status='processing',stage=state.get('stage','queued'))
+            if state.get('status')!='completed':
+                return dict(job_id=jid,status='failed',error=dict(code='incomplete_result',
+                    message=state.get('message') or state.get('result',{}).get('error') or 'Gemma не завершила анализ'))
+            try:return gemma_completed_result(state,gemma_folder)
+            except (ValueError,KeyError,OSError,TypeError) as exc:
+                return dict(job_id=jid,status='failed',error=dict(code='incomplete_result',message=str(exc)))
         state=self.jobs.get(jid);folder=self.jobs.folder(jid)
         if state['status'] in ('uploading','queued','processing'):
             if self.jobs.remaining(state)<=0:
@@ -275,6 +365,12 @@ class JuryAPI:
             if not match:raise APIError(404,'not_found','Задание не найдено')
             jid=match[1]
             if match[2]:
+                gemma_folder=self.root/'runs/gemma_lab/uploads'/jid
+                if (gemma_folder/'job.json').is_file():
+                    state=json.loads((gemma_folder/'job.json').read_text())
+                    if state.get('status')!='completed' or not state.get('preview_ready'):
+                        raise APIError(404,'preview_unavailable','Предпросмотр пока недоступен')
+                    self.send_preview(handler,gemma_folder/'preview.mp4');return True
                 state=self.jobs.get(jid)
                 if state['status']!='completed' or not state.get('preview_ready'):
                     raise APIError(404,'preview_unavailable','Предпросмотр пока недоступен')
