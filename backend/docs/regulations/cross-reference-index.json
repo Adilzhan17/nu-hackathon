@@ -1,0 +1,743 @@
+{
+  "checked_on": "2026-10-17",
+  "source_ids": [
+    "V1700016120",
+    "V1900018545",
+    "V1900019680",
+    "V2000020075"
+  ],
+  "scope": "HTML-ссылки на акты из четырёх базовых текстов. Включены внутренние ссылки и сноски. Не охватывает все упоминания без гиперссылок и рекурсивные зависимости.",
+  "link_occurrences": 466,
+  "unique_targets": 68,
+  "complete_dependency_closure": false,
+  "entries": [
+    {
+      "target_id": "U030001271_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/U030001271_",
+      "source_ids": [
+        "V1700016120",
+        "V1900018545",
+        "V1900019680"
+      ],
+      "link_occurrences": 6,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "national-bank-statute.txt",
+      "title": "Об утверждении Положения и структуры Национального Банка Республики Казахстан"
+    },
+    {
+      "target_id": "V2500037429",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2500037429",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 17,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V1900019680",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1900019680",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 73,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "nbrk-231.txt",
+      "title": "Об утверждении Правил осуществления кассовых операций и операций по инкассации банкнот, монет и ценностей в банках второго уровня, филиалах банков-нерезидентов Республики Казахстан, Национальном операторе почты и юридических лицах, исключительной деятельностью которых является инкассация банкнот, монет и ценностей"
+    },
+    {
+      "target_id": "Z950002155_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z950002155_",
+      "source_ids": [
+        "V1900019680",
+        "V2000020075"
+      ],
+      "link_occurrences": 4,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "national-bank-law.txt",
+      "title": "О Национальном Банке Республики Казахстан"
+    },
+    {
+      "target_id": "Z950002444_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z950002444_",
+      "source_ids": [
+        "V1900019680",
+        "V2000020075"
+      ],
+      "link_occurrences": 2,
+      "status": "legacy_reference",
+      "note": "Старый банковский закон упомянут в исходных текстах; основной новый закон №258 сохранён. Сохраняемые переходные положения старого закона проверяются отдельно."
+    },
+    {
+      "target_id": "V2600038217",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2600038217",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 13,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "Z2600000258",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z2600000258",
+      "source_ids": [
+        "V1900018545",
+        "V1900019680"
+      ],
+      "link_occurrences": 2,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "bank-law-258.txt",
+      "title": "О банках и банковской деятельности в Республике Казахстан"
+    },
+    {
+      "target_id": "V2000020075",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2000020075",
+      "source_ids": [
+        "V1900018545",
+        "V1900019680",
+        "V2000020075"
+      ],
+      "link_occurrences": 9,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "nbrk-14.txt",
+      "title": "Об утверждении Правил организации охраны и устройства помещений банков второго уровня, филиалов банков-нерезидентов Республики Казахстан, Национального оператора почты, юридических лиц, исключительной деятельностью которых является инкассация банкнот, монет и ценностей, и юридических лиц, осуществляющих деятельность исключительно через обменные пункты на основании лицензии Национального Банка Республики Казахстан на обменные операции с наличной иностранной валютой"
+    },
+    {
+      "target_id": "V2200031252",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2200031252",
+      "source_ids": [
+        "V1900019680",
+        "V2000020075"
+      ],
+      "link_occurrences": 21,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "Z090000191_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z090000191_",
+      "source_ids": [
+        "V1900018545",
+        "V1900019680"
+      ],
+      "link_occurrences": 11,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "aml-law-191.txt",
+      "title": "О противодействии легализации (отмыванию) доходов, полученных преступным путем, финансированию терроризма и финансированию распространения оружия массового уничтожения"
+    },
+    {
+      "target_id": "K2600000255",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/K2600000255",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 2,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "digital-code.txt",
+      "title": "ЦИФРОВОЙ КОДЕКС РЕСПУБЛИКИ КАЗАХСТАН"
+    },
+    {
+      "target_id": "V2200027073",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2200027073",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 2,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V1700016120",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1700016120",
+      "source_ids": [
+        "V1700016120",
+        "V1900019680"
+      ],
+      "link_occurrences": 24,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "nbrk-230.txt",
+      "title": "Об утверждении Правил определения платежности банкнот и монет национальной валюты Республики Казахстан"
+    },
+    {
+      "target_id": "V2600039191",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2600039191",
+      "source_ids": [
+        "V1700016120",
+        "V1900018545",
+        "V1900019680"
+      ],
+      "link_occurrences": 54,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "nbrk-78-amendments.txt",
+      "title": "О внесении изменений в некоторые постановления Правления Национального Банка Республики Казахстан"
+    },
+    {
+      "target_id": "V1900018545",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1900018545",
+      "source_ids": [
+        "V1900018545",
+        "V1900019680"
+      ],
+      "link_occurrences": 33,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "nbrk-49.txt",
+      "title": "Об утверждении Правил осуществления обменных операций с наличной иностранной валютой в Республике Казахстан"
+    },
+    {
+      "target_id": "V2300033003",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2300033003",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "road-rules-534.txt",
+      "title": "Об утверждении Правил дорожного движения, Основных положений по допуску транспортных средств к эксплуатации, перечня оперативных и специальных служб, транспорт которых подлежит оборудованию специальными световыми и звуковыми сигналами и окраске по специальным цветографическим схемам"
+    },
+    {
+      "target_id": "Z1400000194",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z1400000194",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "road-law.txt",
+      "title": "О дорожном движении"
+    },
+    {
+      "target_id": "V010001482_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V010001482_",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V050004048_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V050004048_",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V070004936_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V070004936_",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V080005483_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V080005483_",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V090005843_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V090005843_",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1000006534",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1000006534",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1100007122",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1100007122",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1200007985",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1200007985",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1200007995",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1200007995",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1200007956",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1200007956",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1300008567",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1300008567",
+      "source_ids": [
+        "V1700016120",
+        "V1900019680"
+      ],
+      "link_occurrences": 4,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1500010715",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1500010715",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1500013316",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1500013316",
+      "source_ids": [
+        "V1700016120",
+        "V1900019680"
+      ],
+      "link_occurrences": 2,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1800018173",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1800018173",
+      "source_ids": [
+        "V1900019680"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1900018297",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1900018297",
+      "source_ids": [
+        "V1900019680",
+        "V2000020075"
+      ],
+      "link_occurrences": 2,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V2000021287",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2000021287",
+      "source_ids": [
+        "V2000020075"
+      ],
+      "link_occurrences": 3,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V1200008080",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1200008080",
+      "source_ids": [
+        "V2000020075"
+      ],
+      "link_occurrences": 2,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "P1900000018",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/P1900000018",
+      "source_ids": [
+        "V2000020075"
+      ],
+      "link_occurrences": 1,
+      "status": "unresolved_link",
+      "note": "У ссылки нет извлечённого контекста; название и назначение не подтверждены. Не использовать как основание."
+    },
+    {
+      "target_id": "V2400035552",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2400035552",
+      "source_ids": [
+        "V2000020075"
+      ],
+      "link_occurrences": 11,
+      "status": "transition_read_in_core_text",
+      "note": "№88: временные редакции №14 до01.01.2027 разобраны в каталоге; полный отдельный изменяющий акт не архивирован."
+    },
+    {
+      "target_id": "V1900018961",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1900018961",
+      "source_ids": [
+        "V2000020075"
+      ],
+      "link_occurrences": 1,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "mvd-602.txt",
+      "title": "Об утверждении Правил оборота гражданского и служебного оружия и патронов к нему"
+    },
+    {
+      "target_id": "V2400034746",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2400034746",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 17,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V030002689_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V030002689_",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V070004610_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V070004610_",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V100006348_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V100006348_",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1200007983",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1200007983",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V14Y0010217",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V14Y0010217",
+      "source_ids": [
+        "V1700016120"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "U2000000285",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/U2000000285",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "historical_special_period",
+      "note": "Ссылка на чрезвычайное положение2020года в примечании о сроках отчётности. Не действующее универсальное правило."
+    },
+    {
+      "target_id": "V2000020257",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2000020257",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "historical_special_period",
+      "note": "Ссылка в примечании о продлении сроков отчётности в период ЧП; применимость к конкретной исторической дате проверяется отдельно."
+    },
+    {
+      "target_id": "V1900019846",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1900019846",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 25,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "Z100000257_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z100000257_",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 2,
+      "status": "licensing_or_public_service_context",
+      "note": "Государственная статистика: полномочия/отчётность. Полный отдельный разбор статистического законодательства не выполнен."
+    },
+    {
+      "target_id": "V2500037561",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2500037561",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 16,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V2300033506",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2300033506",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 24,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V2200027113",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2200027113",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 3,
+      "status": "conditional_nonbank_scope",
+      "note": "№20: внутренний контроль небанковских обменных организаций. Не подставлять вместо банковского №18."
+    },
+    {
+      "target_id": "V2100026123",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2100026123",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 3,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V2100022685",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2100022685",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 6,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "V2000020715",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2000020715",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 17,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "Z930004200_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z930004200_",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "licensing_or_public_service_context",
+      "note": "Ссылка в контексте изменения места регистрации и переоформления лицензии; не отдельное видимое действие кассира."
+    },
+    {
+      "target_id": "Z1800000167",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z1800000167",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 7,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "currency-law.txt",
+      "title": "О валютном регулировании и валютном контроле"
+    },
+    {
+      "target_id": "Z1400000202",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z1400000202",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 6,
+      "status": "licensing_or_public_service_context",
+      "note": "Разрешения и уведомления: процедуры лицензирования; не универсальное кассовое нарушение."
+    },
+    {
+      "target_id": "V2500036407",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2500036407",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "amendment_or_editorial_reference",
+      "note": "Ссылка в сноске/редакционной истории базового текста. Отдельная полная проверка этого изменяющего акта и всех сроков не заявлена."
+    },
+    {
+      "target_id": "Z1300000073",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z1300000073",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 7,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "identity-documents.txt",
+      "title": "О документах, удостоверяющих личность"
+    },
+    {
+      "target_id": "V2200026981",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V2200026981",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "unresolved_link_mismatch",
+      "note": "В приложении №49 подпись ссылки называет №20 и регистрацию27113, href ведёт на26981. Целевой акт не подтверждён; не использовать как основание."
+    },
+    {
+      "target_id": "K1500000414",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/K1500000414",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 2,
+      "status": "text_archived",
+      "note": "Полная текстовая копия сохранена; разбор ограничен выбранными положениями каталога.",
+      "local_text": "labor-code.txt",
+      "title": "Трудовой кодекс Республики Казахстан"
+    },
+    {
+      "target_id": "Z010000267_",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/Z010000267_",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "licensing_or_public_service_context",
+      "note": "Праздники/режим портала госуслуги, а не запрет работы кассы в выходной."
+    },
+    {
+      "target_id": "V14Y0009801",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V14Y0009801",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1500010873",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1500010873",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1500012970",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1500012970",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1600013219",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1600013219",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1600014564",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1600014564",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1700016162",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1700016162",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    },
+    {
+      "target_id": "V1800017677",
+      "canonical_url": "https://adilet.zan.kz/rus/docs/V1800017677",
+      "source_ids": [
+        "V1900018545"
+      ],
+      "link_occurrences": 1,
+      "status": "repeal_list_reference",
+      "note": "Ссылка в перечне отменяемых актов/их пунктов. Это не доказательство утраты силы всего целевого акта и не действующее основание для детектора."
+    }
+  ]
+}
