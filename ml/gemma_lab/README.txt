@@ -69,8 +69,8 @@ POST requests without engine=gemma keep their original handler.
 
 JURY API PROFILE
 Set NUHACK_JURY_ENGINE=gemma on the process serving /api/v1. Authenticated MOV
-uploads are streamed to the same loopback worker and use a bounded 270-second,
-2-second overview profile. Completed evidence-gated rules are converted to the
+uploads are streamed to the same loopback worker and use a bounded 270-second
+profile with at most18 evenly scheduled overview frames. Completed evidence-gated rules are converted to the
 required binary verdict, timestamp and 1–3 base64 JPEG frames. Partial runs fail
 instead of being reported as no_violation. Legacy X3D job IDs remain readable.
 

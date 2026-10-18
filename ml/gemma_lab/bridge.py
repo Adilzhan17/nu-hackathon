@@ -1,6 +1,7 @@
 """CPU frame preparation and private T4 transport, isolated from existing upload jobs."""
 import hashlib
 import json
+import math
 from pathlib import Path
 import shlex
 import subprocess
@@ -34,7 +35,7 @@ def probe(source):
 
 def prepare(folder, overview_step=.5):
     import av
-    if overview_step not in (.5, 2.0):
+    if not isinstance(overview_step,(int,float)) or not .5<=overview_step<=12 or overview_step*4!=round(overview_step*4):
         raise ValueError('Unsupported overview sampling step')
     source=folder/'source';metadata=probe(source);sha=hashlib.sha256(source.read_bytes()).hexdigest()
     frames=[];dense=[];index=0
@@ -85,9 +86,14 @@ def prepare(folder, overview_step=.5):
 
 
 def process(folder,emit,seconds=900,overview_step=.5):
+    if overview_step is None:
+        duration=probe(folder/'source')['duration_sec']
+        overview_step=max(2.0,math.ceil(duration/17*4)/4)
     emit(status='processing',stage='sampling',message=f'Извлекаем кадры через {overview_step:g} с и контекст для уточнения')
     plan=prepare(folder,overview_step=overview_step)
-    emit(duration_sec=plan['duration_sec'],sampled_frames=len(plan['frames']),preview_ready=True,stage='private_transfer',
+    actual_step=(plan['frames'][1]['timestamp']-plan['frames'][0]['timestamp']) if len(plan['frames'])>1 else overview_step
+    emit(duration_sec=plan['duration_sec'],sampled_frames=len(plan['frames']),sampling_step_sec=round(actual_step,6),
+         preview_ready=True,stage='private_transfer',
          message='Передаём кадры на собственный T4; внешние AI API не используются')
     remote=REMOTE+'/runs/gemma_lab/'+folder.name
     subprocess.run(SSH+['mkdir -m 700 -p '+shlex.quote(remote)],check=True,capture_output=True,timeout=15)

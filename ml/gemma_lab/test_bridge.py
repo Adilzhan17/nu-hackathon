@@ -70,4 +70,12 @@ class SamplingTests(unittest.TestCase):
             self.assertEqual([f['requested_sec'] for f in plan['frames']],[0,2,4,6,8])
             self.assertGreater(len(plan['detail_frames']),len(plan['frames']))
 
+    def test_adaptive_jury_step_caps_long_video_overview(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder=Path(temporary);fixture(folder,72.7)
+            metadata=probe(folder/'source');step=max(2.0,__import__('math').ceil(metadata['duration_sec']/17*4)/4)
+            plan=prepare(folder,overview_step=step)
+            self.assertLessEqual(len(plan['frames']),18)
+            self.assertGreaterEqual(step,4.0)
+
 if __name__=='__main__':unittest.main()

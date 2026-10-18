@@ -82,9 +82,9 @@ def make_handler(root):
                 mode='gemma_lab',result=None,review_status='proposed',ground_truth=False)
             jury_profile=self.headers.get('X-Gemma-Profile')=='jury'
             seconds=270 if jury_profile else 900
-            overview_step=2.0 if jury_profile else .5
+            overview_step=None if jury_profile else .5
             state.update(profile='jury_api' if jury_profile else 'web_full',max_seconds=seconds,
-                         sampling_step_sec=overview_step)
+                         sampling_profile='adaptive_max_18_overview_frames' if jury_profile else 'full_half_second')
             def emit(**values):
                 state.update(updated_at=time.time(),**values);atomic(folder/'job.json',state)
             try:
