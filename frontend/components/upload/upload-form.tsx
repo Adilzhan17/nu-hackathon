@@ -15,6 +15,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ModelNotice } from "@/components/layout/model-notice";
 import { analyzeVideo, USE_MOCK_API } from "@/services/api";
 import { rememberUpload } from "@/lib/session";
 import { cn, fileSize, validateVideo } from "@/lib/utils";
@@ -60,13 +61,14 @@ export function UploadForm() {
     setUploading(true);
     setError("");
     controller.current = new AbortController();
+    const createdAt = Date.now();
     try {
       const { job_id } = await analyzeVideo(file, scenario, controller.current.signal);
       if (controller.current.signal.aborted) return;
       rememberUpload(job_id, file, {
         name: file.name,
         size: file.size,
-        createdAt: Date.now(),
+        createdAt,
         mock: USE_MOCK_API,
         scenario,
       });
@@ -93,6 +95,7 @@ export function UploadForm() {
           {USE_MOCK_API ? "Без отправки на сервер" : "Ваш сервис обработки"}
         </span>
       </div>
+      <ModelNotice />
       <div className="upload-layout">
         <form className="panel upload-panel" onSubmit={submit}>
           <div className="section-heading">
@@ -170,7 +173,7 @@ export function UploadForm() {
                   <ArrowUpIcon />
                 </Button>
                 <small>
-                  .MOV <span>·</span> до 500 МБ
+                  .MOV <span>·</span> до 64 МиБ
                 </small>
               </>
             )}

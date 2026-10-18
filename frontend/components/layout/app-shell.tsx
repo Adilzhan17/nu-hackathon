@@ -3,13 +3,17 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  Activity,
   ArrowUpRight,
   ChevronRight,
   CircleHelp,
   Clapperboard,
+  ClipboardCheck,
   LayoutDashboard,
+  Layers,
   Menu,
   Plus,
+  Pencil,
   ScanLine,
   ShieldCheck,
   X,
@@ -64,7 +68,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Обзор", icon: LayoutDashboard, active: pathname === "/" },
     {
       href: "/analysis/new",
-      label: "Новый анализ",
+      label: "Forte X · новый анализ",
       icon: Plus,
       active: pathname === "/analysis/new",
     },
@@ -98,13 +102,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           href="/"
           className="brand"
           onClick={() => setOpen(false)}
-          aria-label="Forte Vision — главная"
+          aria-label="Forte X — главная"
         >
           <span className="brand-mark">
             <ScanLine size={26} strokeWidth={2.3} />
           </span>
           <span>
-            forte<span className="brand-light">vision</span>
+            Forte<span className="brand-light"> X</span>
             <small>ВИДЕОКОНТРОЛЬ ОПЕРАЦИЙ</small>
           </span>
         </Link>
@@ -133,6 +137,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               {item.active && <span className="nav-dot" />}
             </Link>
           ))}
+          {[
+            { href: "/analysis/tests", label: "Тесты Forte X", icon: ClipboardCheck },
+            { href: "/training", label: "Обучение", icon: Activity },
+            { href: "/scenarios", label: "Контекстный пилот", icon: Layers },
+            { href: "/label", label: "Разметка", icon: Pencil },
+            { href: "/readiness", label: "Аудит качества", icon: ClipboardCheck },
+          ].map(({ href, label, icon: Icon }) => (
+            <a key={href} href={href} className="nav-link" onClick={() => setOpen(false)}>
+              <Icon size={19} />
+              <span>{label}</span>
+            </a>
+          ))}
         </nav>
         <div className="sidebar-bottom">
           <div className="local-note">
@@ -144,7 +160,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 : "Видео передаётся только в настроенный сервис анализа."}
             </p>
             <span>
-              {USE_MOCK_API ? "Локальный деморежим" : "Защищённый серверный API"}
+              {USE_MOCK_API ? "Локальный деморежим" : "Серверный API"}
               <ArrowUpRight size={14} />
             </span>
           </div>

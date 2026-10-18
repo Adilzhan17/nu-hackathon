@@ -13,17 +13,19 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DemoList } from "@/components/dashboard/demo-list";
+import { ModelNotice } from "@/components/layout/model-notice";
 import { USE_MOCK_API } from "@/services/api";
 export default function Dashboard() {
   return (
     <div className="page dashboard-page">
       <div className="page-heading">
         <div>
-          <h1>Обзор платформы</h1>
+          <h1>Forte X</h1>
           <p>Видеоконтроль кассовых операций в одном рабочем пространстве.</p>
         </div>
         <span className="subtle-tag">ForteBank · Datathon 2026</span>
       </div>
+      <ModelNotice />
       <section className="overview-hero">
         <div className="hero-copy">
           <h2>
@@ -39,13 +41,13 @@ export default function Dashboard() {
             <Button asChild>
               <Link href="/analysis/new">
                 <Plus size={18} />
-                Новый анализ
+                Запустить Forte X
                 <ArrowRight size={17} />
               </Link>
             </Button>
-            <Link className="text-link" href="/analysis/demo-violation">
+            <Link className="text-link" href="/analysis/tests">
               <CirclePlay size={18} />
-              Посмотреть пример
+              Реальные тесты и результаты
             </Link>
           </div>
           <div className="hero-assurance">

@@ -11,6 +11,8 @@ export const violationSchema = z.object({
   type: z.string().min(1),
   timecode_sec: seconds,
   description: z.string().min(1),
+  certainty: z.enum(["suspected", "insufficient_data", "confirmed"]).optional(),
+  classification_status: z.enum(["unclassified", "classified"]).optional(),
   evidence_frames: z.array(evidenceFrameSchema).min(1).max(3),
   regulatory_source: z
     .object({
@@ -22,10 +24,12 @@ export const violationSchema = z.object({
         .refine((v) => /^https:\/\//.test(v))
         .optional(),
     })
-    .optional(),
+    .nullish(),
 });
 const common = {
   job_id: z.string().min(1),
+  warnings: z.array(z.string()).optional(),
+  certainty: z.enum(["suspected", "insufficient_data", "confirmed", "limited_scope"]).optional(),
   preview_url: z
     .string()
     .optional()
@@ -34,7 +38,11 @@ const common = {
 export const analysisJobSchema = z
   .discriminatedUnion("status", [
     z.object({ ...common, status: z.literal("processing") }),
-    z.object({ ...common, status: z.literal("failed"), error: z.string().optional() }),
+    z.object({
+      ...common,
+      status: z.literal("failed"),
+      error: z.union([z.string(), z.object({ code: z.string(), message: z.string() })]).optional(),
+    }),
     z.object({
       ...common,
       status: z.literal("done"),

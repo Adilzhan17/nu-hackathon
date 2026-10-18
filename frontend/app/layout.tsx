@@ -3,7 +3,7 @@ import "@fontsource-variable/manrope";
 import "./globals.css";
 import { AppShell } from "@/components/layout/app-shell";
 export const metadata: Metadata = {
-  title: { default: "Forte Vision — видеоконтроль операций", template: "%s · Forte Vision" },
+  title: { default: "Forte X — видеоконтроль операций", template: "%s · Forte X" },
   description:
     "Платформа анализа видеозаписей кассовых операций. События, таймкоды и кадры для проверки специалистом.",
   icons: { icon: "/icon.svg" },

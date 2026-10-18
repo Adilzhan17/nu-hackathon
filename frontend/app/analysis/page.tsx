@@ -20,6 +20,12 @@ export default function AnalysisPage() {
         </Button>
       </div>
       <LastAnalysis />
+      <section className="panel" style={{padding:24, marginBottom:24}}>
+        <h2>Forte X · история запусков</h2>
+        <p>Реальные загрузки, рамки, контекст и ошибки сохраняются в рабочей области.</p>
+        <a className="text-link" href="/analyze">Открыть историю Forte X →</a>
+        <p><Link className="text-link" href="/analysis/tests">Открыть проверенные запуски и тесты →</Link></p>
+      </section>
       <section className="panel examples-panel">
         <div className="section-heading">
           <h2>Учебные сценарии</h2>

@@ -267,6 +267,7 @@ svg {
   display: flex;
   flex-direction: column;
   padding: 30px 17px 0;
+  overflow-y: auto;
 }
 .brand {
   display: flex;
@@ -1400,6 +1401,18 @@ main:focus {
 .demo-banner > .badge {
   margin-left: auto;
   background: #e4e9f0;
+}
+.model-notice {
+  border-color: #e9d7a2;
+  background: #fff7e7;
+  color: #755a2e;
+  font-size: 13px;
+}
+.model-notice strong {
+  color: #5e451b;
+}
+.model-notice > svg {
+  flex-shrink: 0;
 }
 .results-grid {
   display: grid;
@@ -2674,3 +2687,6 @@ main:focus {
     transform: translateX(75%);
   }
 }
+
+/* Forte X production workspace */
+.forte-x-page{max-width:1600px}.forte-x-links{display:flex;gap:20px;flex-wrap:wrap;margin:0 0 18px;font-size:13px}.forte-x-links a{color:var(--primary,#a71350);text-decoration:underline;text-underline-offset:4px}.forte-x-test-panel{padding:26px;margin-bottom:22px}.forte-x-test-panel p{margin:14px 0;line-height:1.7}.forte-x-metrics{width:100%;border-collapse:collapse;font-size:14px}.forte-x-metrics th,.forte-x-metrics td{padding:12px;text-align:left;border-bottom:1px solid #e5e0e7;white-space:nowrap}

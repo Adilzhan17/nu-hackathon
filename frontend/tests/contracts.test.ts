@@ -26,6 +26,44 @@ test("rejects contradictory verdicts and incomplete done responses", () => {
   ])
     assert.equal(analysisJobSchema.safeParse(payload).success, false);
 });
+test("preserves uncertainty and warnings, never fabricates certainty or a regulation", () => {
+  const result = analysisJobSchema.parse({
+    job_id: "job-1",
+    status: "done",
+    verdict: "violation",
+    certainty: "suspected",
+    warnings: ["Тип нарушения не определён"],
+    violations: [
+      {
+        ...event,
+        certainty: "suspected",
+        classification_status: "unclassified",
+        regulatory_source: null,
+      },
+    ],
+  });
+  assert.equal(result.certainty, "suspected");
+  assert.deepEqual(result.warnings, ["Тип нарушения не определён"]);
+  if (result.status === "done") {
+    assert.equal(result.violations[0].classification_status, "unclassified");
+    assert.equal(result.violations[0].regulatory_source, null);
+  }
+  const missing = analysisJobSchema.parse({
+    job_id: "job-2",
+    status: "done",
+    verdict: "no_violation",
+    violations: [],
+  });
+  assert.equal(missing.certainty, undefined);
+  assert.equal(
+    analysisJobSchema.safeParse({
+      job_id: "job-1",
+      status: "failed",
+      error: { code: "deadline_exceeded", message: "Истекло 300 секунд" },
+    }).success,
+    true,
+  );
+});
 test("rejects invalid timestamps, missing evidence and executable media URLs", () => {
   for (const bad of [
     { ...event, timecode_sec: -1 },

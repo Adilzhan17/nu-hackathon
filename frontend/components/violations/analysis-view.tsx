@@ -63,7 +63,7 @@ export function AnalysisView({ id }: { id: string }) {
           <p role="alert">
             {error ??
               (job?.status === "failed"
-                ? job.error ||
+                ? (typeof job.error === "string" ? job.error : job.error?.message) ||
                   "Обработка завершилась ошибкой. Выберите другую запись и повторите анализ."
                 : "")}
           </p>
@@ -176,6 +176,17 @@ export function AnalysisView({ id }: { id: string }) {
           <span className="badge badge-neutral">Демо</span>
         </div>
       )}
+      {!demo && job.warnings?.length ? (
+        <div className="demo-banner" role="note">
+          <Info size={16} />
+          <div>
+            <strong>Ограничения анализа</strong>
+            {job.warnings.map((warning, i) => (
+              <p key={i}>{warning}</p>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <div className="results-grid">
         <div className="results-left">
           <VideoPlayer
@@ -212,7 +223,7 @@ export function AnalysisView({ id }: { id: string }) {
             <p>
               {violation
                 ? "Обнаружены признаки возможных нарушений. Проверьте отмеченные фрагменты."
-                : "В этой записи система не обнаружила признаков возможных нарушений."}
+                : "Модель не сработала на этой записи. Это не подтверждает проверку всех правил кассовой операции."}
             </p>
             <span>
               {violation ? `${events.length} события для проверки` : "0 отмеченных событий"}
@@ -241,6 +252,20 @@ export function AnalysisView({ id }: { id: string }) {
                     </span>
                   </span>
                   <strong>{event.type}</strong>
+                  <span>
+                    {event.classification_status === "unclassified"
+                      ? "Тип нарушения не установлен"
+                      : ""}
+                  </span>
+                  <span>
+                    {event.certainty === "suspected"
+                      ? "Подозрение — требует проверки"
+                      : event.certainty === "insufficient_data"
+                        ? "Недостаточно данных"
+                        : event.certainty === "confirmed"
+                          ? "Подтверждение указано сервером"
+                          : "Достоверность не указана"}
+                  </span>
                   <span className="event-item-bottom">
                     Проверить фрагмент
                     <ChevronRight size={15} />
