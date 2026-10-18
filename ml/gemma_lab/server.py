@@ -58,16 +58,21 @@ def make_handler(root):
             if path=='/status':
                 recent=[]
                 for p in sorted(directory.glob('*/job.json'),key=lambda p:p.stat().st_mtime,reverse=True)[:10]:
-                    j=json.loads(p.read_text());recent.append({k:j.get(k) for k in ('id','name','status','created_at')})
+                    j=json.loads(p.read_text())
+                    if j.get('profile')=='jury_api':continue
+                    recent.append({k:j.get(k) for k in ('id','name','status','created_at')})
                 return self.json(dict(busy=active.locked(),mode='local_gemma',sample_step_sec=.5,max_duration_sec=MAX_DURATION,
                     max_bytes=MAX_BYTES,max_seconds=900,model='Gemma 4 12B QAT Q4_0',recent=recent))
             match=re.fullmatch(r'/jobs/([a-f0-9]{32})(?:/(media|frames/[fd]\d{5}\.jpg))?',path)
             if not match:return self.json({'error':'Not found'},404)
             folder=directory/match[1]
             if not (folder/'job.json').exists():return self.json({'error':'Not found'},404)
+            state=json.loads((folder/'job.json').read_text())
+            # Jury footage is only available through the authenticated jury API.
+            if state.get('profile')=='jury_api':return self.json({'error':'Not found'},404)
             if match[2]=='media':return self.file(folder/'preview.mp4','video/mp4')
             if match[2]:return self.file(folder/match[2],'image/jpeg')
-            return self.json(attach_regulatory_sources(json.loads((folder/'job.json').read_text())))
+            return self.json(attach_regulatory_sources(state))
         def do_POST(self):
             if urlsplit(self.path).path!='/jobs':return self.json({'error':'Not found'},404)
             # Only a same-origin checked Next route can initiate the loopback worker.

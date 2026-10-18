@@ -30,7 +30,8 @@ visible continuity; keep customers distinct. from_actor/to_actor describes trans
 Similar bundles after occlusion need not be the same cash. Earlier memory is a fallible proposal;
 preserve source, last-seen time and uncertainty. After loss of view, current state is unknown until
 reobserved. Do not copy past facts as fresh evidence. Report visible changes/contradictions.
-The survey samples every 0.5 s and detail windows every 0.25 s. Gaps and clipped operation boundaries
+Survey intervals vary: use the actual timestamps supplied with each image. Detail windows sample
+every 0.25 s. Gaps and clipped operation boundaries
 remain unobserved; neither full sampled coverage nor a missing sampled action proves absence.
 
 GENERAL OPERATIONAL RULES; APPLY ONLY WHEN TRIGGERED

@@ -14,6 +14,7 @@ import urllib.request
 
 from .protocol import ACTIONS, PROPERTIES, assess, coverage, inspect_answer, memory_before, prompt_memory, windows, parse_result
 from .schema import output_schema
+from .detail_selection import select_detail_centers
 
 
 def write(path,value):
@@ -177,12 +178,10 @@ def run(root,job,seconds,instructions_path=None):
             for i,block in enumerate(windows(refs)):
                 ask(f'overview_{i:03d}',block)
             # A second pass checks up to two transitions with actual before/after frames.
-            centers=[]
-            priority={'employee_leaves','cash_received','person_enters','cash_counted_by_hand','cash_counter_used','phone_used','drink_used'}
-            for o in observations:
-                if o['action'] in priority and all(abs(o['start_sec']-c)>2 for c in centers):centers.append(o['start_sec'])
-            if not centers and refs:centers=[refs[len(refs)//2]['timestamp']]
-            for i,c in enumerate(centers[:2]):
+            selection=select_detail_centers(observations,refs)
+            result['detail_selection']=dict(version='security_transition_priority_v1',selected=selection)
+            for i,chosen in enumerate(selection):
+                c=chosen['timestamp']
                 block=[f for f in plan['detail_frames'] if max(0,c-1)<=f['timestamp']<=min(plan['duration_sec'],c+1)]
                 if len(block)>=2:ask(f'detail_{i:03d}',block)
             complete=coverage(refs,inspected)['all_sampled_frames_inspected']

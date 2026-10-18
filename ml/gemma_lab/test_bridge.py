@@ -22,6 +22,28 @@ def fixture(folder,seconds):
         for packet in stream.encode():output.mux(packet)
 
 class SamplingTests(unittest.TestCase):
+    def test_jury_footage_is_not_exposed_by_public_lab_routes(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);directory=root/'runs/gemma_lab/uploads'
+            ids={'a'*32:'jury_api','b'*32:'web_full'}
+            for jid,profile in ids.items():
+                folder=directory/jid;folder.mkdir(parents=True)
+                (folder/'job.json').write_text(json.dumps(dict(id=jid,profile=profile,status='completed',name='private.mov')))
+            server=ThreadingHTTPServer(('127.0.0.1',0),make_handler(root))
+            thread=threading.Thread(target=lambda:server.serve_forever(poll_interval=.01),daemon=True);thread.start()
+            try:
+                def get(path):
+                    connection=http.client.HTTPConnection('127.0.0.1',server.server_port)
+                    connection.request('GET',path);response=connection.getresponse()
+                    data=json.loads(response.read());connection.close();return response.status,data
+                status,data=get('/status')
+                self.assertEqual(status,200)
+                self.assertEqual([j['id'] for j in data['recent']],['b'*32])
+                for suffix in ('','/media','/frames/f00000.jpg'):
+                    self.assertEqual(get('/jobs/'+'a'*32+suffix)[0],404)
+                self.assertEqual(get('/jobs/'+'b'*32)[0],200)
+            finally:server.shutdown();server.server_close();thread.join()
+
     def test_72_7_seconds_is_not_rejected_or_truncated_at_one_minute(self):
         with tempfile.TemporaryDirectory() as temporary:
             folder=Path(temporary);fixture(folder,72.7)

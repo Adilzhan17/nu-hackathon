@@ -54,7 +54,7 @@ class ProtocolTests(unittest.TestCase):
         self.assertFalse(errors)
         result=next(r for r in assess(observations,claims) if r['rule_id']=='valuables_on_departure')
         self.assertEqual(result['verdict'],'violation_supported')
-        self.assertEqual(result['regulatory_source']['section'],'пункт 80; для наличных также пункт 20')
+        self.assertEqual(result['regulatory_source']['section'],'пункт 80')
         self.assertTrue(result['regulatory_source']['url'].startswith('https://adilet.zan.kz/'))
 
     def test_nullable_rule_metadata_does_not_discard_observations(self):

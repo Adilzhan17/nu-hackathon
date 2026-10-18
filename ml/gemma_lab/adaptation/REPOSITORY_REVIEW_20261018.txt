@@ -1,0 +1,101 @@
+Review of four Datathon implementations (2026-10-18)
+===================================================
+
+Purpose: identify transferable methods for this project's own Gemma 4 pipeline.
+External repositories were read in an isolated /tmp directory. No external team
+source code, prompts, weights, annotations, per-video answer tables or footage
+were imported into this repository or used as Gemma training targets.
+No repository-root LICENSE/COPYING was found in these four inspected revisions.
+Dependency model licenses do not grant a license to a team's repository itself.
+This review is attribution for architectural ideas, not a plagiarism guarantee
+or a substitute for the competition's rules on collaboration.
+
+1. https://github.com/i-oeng/forte-veriti
+   revision 2530db910d34f6c46678b44e37370d407b6144c2
+   Inspected service/MODEL_RESULTS.md, app/pipeline and app/catalog.yaml.
+   RF-DETR + tracking + narrow Qwen factual queries + temporal rules; targeted
+   close-ups and a verification step. Main improvement is pipeline design,
+   not a transferable Gemma fine-tune. Reports contain several versions:
+   README quotes 76.2%; latest detailed v12 report quotes 73.8% on 42 clips.
+   Those clips informed development and include duplicates; not an unseen test.
+   Useful idea: distinguish object/action evidence from rule decisions, and
+   validate candidate changes on identical input frames with false alarms.
+
+2. https://github.com/Hotel-zulu/ForteDatathon
+   revision 15d60a51fc5eebd6b91fff2b43866dd75dff13d7
+   Inspected scripts/train_rtdetr.py, src/detectors/__init__.py,
+   docs/training_metrics.csv and configs/regulations.yaml.
+   Actual RT-DETRv2 detector training on manually boxed frames: photometric,
+   scale/crop, affine/perspective and mirror augmentation, video-based split,
+   best-checkpoint selection by validation mAP50. Logged peak mAP50 is .894.
+   This is object detection mAP, NOT 89.4% video-verdict accuracy. The README's
+   statement that perception is a stub is stale relative to current source;
+   build_perception now uses RT-DETR and build_verifier still returns None.
+   Useful idea: verified human supervision and geometric robustness. Detector
+   weights and labels cannot be plugged into Gemma's unrelated architecture.
+
+3. https://github.com/naderans911/Datathon26-fortebank
+   revision 8f58e2e4365cbd423824a7fc97c5bbe15708c72e
+   Inspected scripts/train.py, backend/app/training and config/rules.json.
+   RT-DETR/DINOv2 features plus a fitted classical classifier. Whole-clip/group
+   cross-validation and threshold selection; binary labels remain separate
+   from event categories and verified legal applicability. Scorer weights
+   are private, and threshold-selecting validation is not a final test.
+   Useful idea: freeze source groups, report abstentions and avoid frame leakage.
+
+4. https://github.com/rsduv/datathon26-forte
+   revision 51e5cac6211e2163960c1150ce247fab7ffdacca
+   Inspected README, service/rules.py and laws/LAWS.md.
+   Pretrained Faster R-CNN + sparse OWLv2 object queries + temporal rules;
+   no end-to-end fine-tune on the supplied bank videos. Reported 82% is on
+   40 unique training clips used to choose thresholds, not held-out accuracy.
+   Useful idea: before/after evidence, targeted object checks and explicit
+   limitations for small keys, ambiguous papers and camera changes.
+
+Our experiment
+--------------
+prepare_human_only.py derives 35 specific human-confirmed action examples from
+10 fit groups of our EXISTING frozen protocol. It excludes 45 weak captions
+and 6 generic/state examples. No split is redrawn. It aligns the generic train
+instruction with the existing paired evaluation instruction. LoRA starts from
+the pinned original Gemma base, not the previously degraded adapter. Seed7301,
+learning rate5e-5, rank4 in the existing q/v modules, one pass, 35 updates.
+This is an action-supervision pilot, not direct legal or whole-video training.
+
+Training: runs/gemma_lab/human_only_v2/train
+Manifest: runs/gemma_lab/human_only_v2/prepared/manifest.json
+Paired action evaluation:
+  runs/gemma_lab/adaptation_v1/human_only_v2_eval_actions
+Additional same-16-frame binary diagnostic:
+  runs/gemma_lab/adaptation_v1/human_only_v2_eval_forced_choice
+These are development holdouts already used in the earlier experiment, not an
+independent final test. A successful training run does not justify activation.
+Production GGUF and experimental HF/NF4 are different runtimes; improvements
+in the latter cannot be claimed as production accuracy without deployment tests.
+
+The one-exposure pilot did not improve either metric. A second bounded candidate
+uses the SAME35 unique human examples twice (70 shuffled exposures, not70 new
+annotations), learning rate1e-4 and a fresh base initialization. Its manifests
+and training outputs are under runs/gemma_lab/human_only_v3. Both candidates
+remain experimental until the comparison establishes a reason to activate.
+
+An independent sampling change implements the architectural idea of targeted
+reinspection: prioritize employee departure, keys and safe transitions across
+the whole overview, ahead of early entry/cash events. There are still at most
+two detail windows. The selected observation IDs and centers are recorded.
+This is a coverage heuristic, not a measured accuracy gain. The Gemma prompt
+now describes variable overview intervals honestly instead of always saying
+0.5seconds when the jury profile actually samples more sparsely.
+
+Legal verification
+------------------
+Official Adilet API text was retrieved independently for NBRK231, NBRK14 and
+ARRFR53. Paragraph snapshots and hashes:
+  ml/legal/gemma_sources_verified_20261018.json
+Reproducible checker: python -m ml.gemma_lab.verify_regulatory --output NEW.json
+NBRK231 p80 is relevant to workplace-safe keys/stamps; p76 concerns vault/safe-room
+keys. Cash uses p20, not a generic key rule. Paper documents have no automatic
+mapping to those provisions. NBRK14 p16(1) describes a lockable entrance and
+does not itself supply an immediate-close deadline. ARRFR53 p71(9) concerns
+more than30minutes of inactivity, not any short absence or a lit screen.
+Internal bank rules are still required for those additional obligations.

@@ -31,6 +31,16 @@ const fs=require('node:fs');const assert=require('node:assert/strict');
   assert.match(await page.locator('#status').innerText(),/Обзор видео.*окно 2 из 15/);
   assert.equal(await page.locator('#counts').isVisible(),false);
   assert.ok(!(await page.locator('#rules').innerText()).includes('placeholder'));
-  console.log('UI: rejected video has no results/counters; over-limit duration blocks upload; no JS errors.');
+  const frames=[0,1,2,3].map(i=>({id:'f'+String(i).padStart(5,'0'),timestamp:i}));
+  Object.assign(job,{status:'completed',duration_sec:4,result:{observations:[{start_sec:0,end_sec:3,action:'employee_leaves',description:'Уход',visibility:'clear',evidence:frames.slice(0,2)}],
+    rules:[{rule_id:'valuables_on_departure',verdict:'violation_supported',explanation:'Ключи до и после ухода',evidence:[{start_sec:0,end_sec:3,frames}],
+      regulatory_source:{title:'НБРК № 231',section:'пункт 80',url:'https://adilet.zan.kz/rus/docs/V1900019680#z226',legal_note:'Требуется внутренний порядок.'}}],
+    coverage:{all_sampled_frames_inspected:true,total_sampled_frames:4,inspected_sampled_frames:4}}});
+  await page.reload({waitUntil:'networkidle'});
+  assert.equal(await page.locator('#rules article.rule .evidence img').count(),3);
+  assert.match(await page.locator('#rules article.rule .source').innerText(),/пункт 80/);
+  assert.ok((await page.locator('#rules article.rule .evidence img').last().getAttribute('src')).includes('f00003.jpg'));
+  assert.deepEqual(errors,[]);
+  console.log('UI: failures stay incomplete; upload guard works; supported findings show law and before/after evidence; no JS errors.');
  }finally{await browser.close()}
 })().catch(e=>{console.error(e);process.exitCode=1});

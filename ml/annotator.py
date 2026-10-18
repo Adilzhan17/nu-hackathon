@@ -158,7 +158,7 @@ def prepare_previews(rows, source, destination):
     print(f"Prepared {len(seen)} local MP4 previews (remux, no AI, no audio)", flush=True)
 
 
-def make_handler(store, previews, source=None, training=None, video_jobs=None, jury=None, human=None, objects=None, frame_assist=None):
+def make_handler(store, previews, source=None, training=None, video_jobs=None, jury=None, human=None, objects=None, review_frames=None):
     source = Path(source).resolve() if source is not None else None
 
     class Handler(BaseHTTPRequestHandler):
@@ -179,17 +179,6 @@ def make_handler(store, previews, source=None, training=None, video_jobs=None, j
 
         def do_GET(self):
             path = urlparse(self.path).path
-            if path=='/label/frame-assist.js':
-                return self.send_file(Path(__file__).with_name('frame_assist_ui.js'),'text/javascript; charset=utf-8')
-            if path=='/api/frame-assist/status' and frame_assist is not None:
-                return self.json_response(frame_assist.status())
-            assist_job=re.fullmatch(r'/api/frame-assist/jobs/([a-zA-Z0-9_-]{8,100})(/frame)?',path)
-            if assist_job and frame_assist is not None:
-                try:
-                    if assist_job[2]:return self.send_file(frame_assist.frame_path(assist_job[1]),'image/jpeg')
-                    return self.json_response(frame_assist.get(assist_job[1]))
-                except (KeyError,FileNotFoundError):return self.json_response({'error':'Запрос не найден'},404)
-                except (ValueError,OSError) as exc:return self.json_response({'error':str(exc)},getattr(exc,'status_code',422))
             selected_image=re.fullmatch(r'/api/human-objects/images/(human_[a-f0-9]{24})\.jpg',path)
             if selected_image and objects is not None:
                 row=objects.rows.get(selected_image[1])
@@ -401,8 +390,8 @@ def make_handler(store, previews, source=None, training=None, video_jobs=None, j
                     pass
 
         def do_POST(self):
-            if self.path in {'/api/frame-assist','/api/frame-assist/frames'}:
-                return self.frame_assist_request()
+            if self.path == '/api/human-objects/frames':
+                return self.selected_frame_request()
             if self.path in {'/api/human-review','/api/human-review/tasks','/api/human-review/dataset','/api/human-objects','/api/human-objects/dataset'}:
                 return self.human_request()
             if jury is not None and jury.handle_post(self):
@@ -446,8 +435,8 @@ def make_handler(store, previews, source=None, training=None, video_jobs=None, j
             if not forward(self, 'HEAD'):
                 self.send_error(405)
 
-        def frame_assist_request(self):
-            if frame_assist is None or objects is None:return self.send_error(404)
+        def selected_frame_request(self):
+            if review_frames is None or objects is None:return self.send_error(404)
             try:origin=urlparse(self.headers.get('Origin',''))
             except ValueError:return self.json_response({'error':'Origin rejected'},403)
             if origin.scheme not in {'http','https'} or origin.netloc!=self.headers.get('Host'):
@@ -461,12 +450,8 @@ def make_handler(store, previews, source=None, training=None, video_jobs=None, j
                 if len(raw)!=size:raise ValueError('Запрос получен не полностью')
                 payload=json.loads(raw)
                 if not isinstance(payload,dict):raise ValueError('Expected object')
-                if self.path.endswith('/frames'):
-                    metadata=frame_assist.frame_metadata(payload['job_id']) if payload.get('job_id') else frame_assist.prepare_frame(payload)
-                    result=objects.register_frame(metadata)
-                    if payload.get('job_id'):result['object_url']+='&assist_job='+payload['job_id']
-                    return self.json_response(result,201)
-                return self.json_response(frame_assist.start(payload),202)
+                metadata=review_frames.prepare_frame(payload)
+                return self.json_response(objects.register_frame(metadata),201)
             except (KeyError,FileNotFoundError):return self.json_response({'error':'Кадр или запрос не найден'},404)
             except (ValueError,TypeError,OSError) as exc:
                 return self.json_response({'error':str(exc)},getattr(exc,'status_code',422))
@@ -550,9 +535,9 @@ def main():
     from human_review import HumanReview
     from object_review import ObjectReview
     human,objects=HumanReview(root),ObjectReview(root)
-    from frame_assist import FrameAssist
-    assistant=FrameAssist(root,human,objects)
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(store, previews, args.source, training, video_jobs, jury, human, objects, assistant))
+    from review_frames import ReviewFrames
+    frames=ReviewFrames(root,human,objects)
+    server = ThreadingHTTPServer(("127.0.0.1", args.port), make_handler(store, previews, args.source, training, video_jobs, jury, human, objects, frames))
     print(f"Annotation tool: http://127.0.0.1:{args.port} (use IDE port forwarding)", flush=True)
     server.serve_forever()
 

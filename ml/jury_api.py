@@ -17,7 +17,7 @@ from urllib.parse import quote,urlparse
 from infer_video import file_sha256
 from train_x3d import atomic_json
 from video_jobs import VideoJobs
-from gemma_lab.regulatory import regulatory_source
+from gemma_lab.regulatory import regulatory_source, attach_regulatory_sources
 
 MAX_UPLOAD=64*1024*1024
 MAX_HEADERS=16*1024
@@ -228,11 +228,14 @@ def gemma_completed_result(state,folder):
         if not isinstance(rule,dict) or rule.get('verdict')!='violation_supported':continue
         rule_id=rule.get('rule_id')
         if not isinstance(rule_id,str) or rule_id in seen_rules:continue
-        seen_rules.add(rule_id);source=rule.get('regulatory_source') or regulatory_source(rule_id)
+        seen_rules.add(rule_id)
+        source=rule.get('regulatory_source') if 'regulatory_source' in rule else regulatory_source(rule_id)
         refs=[]
         for evidence in rule.get('evidence',[]):
             for frame in evidence.get('frames',[]) if isinstance(evidence,dict) else []:
                 if isinstance(frame,dict) and frame.get('id') not in {r.get('id') for r in refs}:refs.append(frame)
+        refs.sort(key=lambda frame: frame.get('timestamp', 0))
+        if len(refs)>3:refs=[refs[0],refs[len(refs)//2],refs[-1]]
         encoded=[]
         for frame in refs[:3]:
             frame_id=frame.get('id');stamp=frame.get('timestamp');digest=frame.get('sha256')
@@ -248,7 +251,8 @@ def gemma_completed_result(state,folder):
         if source and source.get('legal_note'):description+=' '+source['legal_note']
         public_source={k:source[k] for k in ('title','section','url') if source.get(k)} if source else None
         violations.append(dict(type=title,timecode_sec=encoded[0]['timestamp_sec'],description=description,
-            certainty='suspected',classification_status='classified',regulatory_source=public_source,
+            certainty='suspected',classification_status='classified' if source else 'unclassified',
+            legal_status='context_review_required' if source else 'internal_rule_required',regulatory_source=public_source,
             evidence_frames=encoded))
     response=dict(job_id=state['id'],status='done',verdict='violation' if violations else 'no_violation',
         violations=violations,warnings=[GEMMA_WARNING],duration_sec=state.get('duration_sec'),
@@ -334,7 +338,7 @@ class JuryAPI:
             if state.get('status')!='completed':
                 return dict(job_id=jid,status='failed',error=dict(code='incomplete_result',
                     message=state.get('message') or state.get('result',{}).get('error') or 'Gemma не завершила анализ'))
-            try:return gemma_completed_result(state,gemma_folder)
+            try:return gemma_completed_result(attach_regulatory_sources(state),gemma_folder)
             except (ValueError,KeyError,OSError,TypeError) as exc:
                 return dict(job_id=jid,status='failed',error=dict(code='incomplete_result',message=str(exc)))
         state=self.jobs.get(jid);folder=self.jobs.folder(jid)

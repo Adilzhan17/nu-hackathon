@@ -13,6 +13,30 @@ SOURCE_URL = "https://adilet.zan.kz/rus/docs/V1900019680"
 
 
 RULE_SOURCES = {
+    "door_after_entry": {
+        "title": "Требования к организации охраны и устройству помещений банков; постановление Правления НБРК от 24.02.2020 № 14",
+        "section": "пункт 16, подпункт 1",
+        "url": "https://adilet.zan.kz/rus/docs/V2000020075",
+        "review_title": "Устройство входной двери кассы",
+        "qualification": "reference_only",
+        "legal_note": (
+            "Пункт требует отдельного входа с закрывающейся на замок дверью. "
+            "Он сам по себе не устанавливает срок закрывания после прохода. "
+            "Для квалификации оставленной открытой двери нужен внутренний режим доступа."
+        ),
+    },
+    "equipment_on_departure": {
+        "title": "Требования к обеспечению информационной безопасности банков; постановление Правления АРРФР от 03.04.2026 № 53",
+        "section": "пункт 53; пункт 71, подпункт 9",
+        "url": "https://adilet.zan.kz/rus/docs/V2600038336",
+        "review_title": "Защита и автоматическая блокировка рабочего места",
+        "qualification": "reference_only",
+        "legal_note": (
+            "Пункт 71(9) предусматривает блокировку или завершение сеанса после более "
+            "30 минут неактивности. Короткое видео и светящийся экран этого не доказывают. "
+            "Обязанность выключать оборудование при каждом уходе из этих пунктов не следует."
+        ),
+    },
     "identity_before_cash": {
         "title": SOURCE_TITLE,
         "section": "пункт 19, подпункт 1",
@@ -55,13 +79,14 @@ RULE_SOURCES = {
     },
     "valuables_on_departure": {
         "title": SOURCE_TITLE,
-        "section": "пункт 80; для наличных также пункт 20",
-        "url": SOURCE_URL,
-        "review_title": "Хранение ключей, печатей и ценностей при уходе",
+        "section": "пункт 80",
+        "url": SOURCE_URL + "#z226",
+        "review_title": "Хранение ключей и печатей при уходе",
         "legal_note": (
             "Пункт 80 требует порядка, исключающего несанкционированное использование, "
             "но конкретный запрет оставлять ключи на сейфе определяется внутренними "
-            "документами банка. Результат является признаком для проверки."
+            "документами банка. Пункт 76 относится к кладовой и сейфовой комнате, "
+            "а не автоматически к рабочему сейфу. Результат является признаком для проверки."
         ),
     },
     "authenticity_after_counting": {
@@ -110,7 +135,23 @@ RULE_SOURCES = {
 def regulatory_source(rule_id):
     """Return a fresh serializable mapping or ``None`` for operational-only rules."""
     value = RULE_SOURCES.get(rule_id)
-    return dict(value) if value else None
+    return dict(value, verified_at="2026-10-18", jurisdiction="Республика Казахстан",
+                qualification=value.get('qualification', 'requires_context_review')) if value else None
+
+
+def source_for_assessment(rule, observations):
+    """Select the law from the evidenced object, never from a binary label."""
+    if rule.get('rule_id') != 'valuables_on_departure':
+        return regulatory_source(rule.get('rule_id'))
+    ids = {e.get('observation_id') for e in rule.get('evidence', [])}
+    properties = {o.get('property') for o in observations
+                  if o.get('observation_id') in ids and o.get('kind') == 'state'}
+    if properties & {'key_location', 'stamp_location'}:
+        return regulatory_source('valuables_on_departure')
+    if 'cash_location' in properties:
+        return regulatory_source('previous_cash_before_next_customer')
+    # The cash/keys provisions do not establish a general paper-document rule.
+    return None
 
 
 def attach_regulatory_sources(job):
@@ -119,6 +160,7 @@ def attach_regulatory_sources(job):
     if not isinstance(result, dict):
         return job
     for rule in result.get("rules", []):
-        if isinstance(rule, dict) and "regulatory_source" not in rule:
-            rule["regulatory_source"] = regulatory_source(rule.get("rule_id"))
+        if isinstance(rule, dict):
+            rule["regulatory_source"] = source_for_assessment(rule, result.get('observations', []))
+            rule["legal_status"] = 'context_review_required' if rule['regulatory_source'] else 'internal_rule_required'
     return job

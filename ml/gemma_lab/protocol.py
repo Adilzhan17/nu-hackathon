@@ -4,7 +4,7 @@ import copy
 import json
 from ml.narration_training.organizer.context import ACTIONS, PROPERTIES, RULES, validate_observations, memory
 from ml.context_pipeline.rules import guarded_assessments
-from .regulatory import regulatory_source
+from .regulatory import source_for_assessment
 
 STEP = .5
 MAX_DURATION = 180
@@ -78,7 +78,8 @@ def assess(observations,claims):
     rows=guarded_assessments(observations)
     for r in rows:
         r['source']='local_gemma_evidence_gated_rule'
-        r['regulatory_source']=regulatory_source(r['rule_id'])
+        r['regulatory_source']=source_for_assessment(r,observations)
+        r['legal_status']='context_review_required' if r['regulatory_source'] else 'internal_rule_required'
         related=[c for c in claims if c['rule_id']==r['rule_id']]
         r['model_claims']=related
         if related and r['verdict']=='insufficient_data':
